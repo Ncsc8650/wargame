@@ -34,24 +34,27 @@
 
     <!-- Header -->
     <header class="bg-navy-800 text-white shadow-lg shrink-0">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-4">
-                <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-8 h-8 text-gold-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
                 </svg>
                 <div>
                     <h1 class="text-2xl font-bold tracking-wide">ระบบรายงานสถานการณ์ Wargame</h1>
-                    <p class="text-sm text-gold-400">โรงเรียนเสนาธิการทหารเรือ <span class="ml-2 px-2 py-0.5 bg-navy-700 rounded text-xs">เวอร์ชัน 2.1 (ช่วงวันที่)</span></p>
+                    <p class="text-sm text-gold-400">โรงเรียนเสนาธิการทหารเรือ <span class="ml-2 px-2 py-0.5 bg-navy-700 rounded text-xs">เวอร์ชัน 2.2</span></p>
                 </div>
             </div>
-            <div class="flex items-center space-x-6">
-                <span class="text-sm">วันที่: <span id="currentDate"></span></span>
+            <div class="flex flex-wrap items-center gap-2 justify-center">
+                <span class="text-sm mr-4 hidden lg:inline">วันที่: <span id="currentDate"></span></span>
                 <!-- View Switch Buttons -->
                 <button onclick="switchView('dashboard')" id="btnNavDashboard" class="bg-gold-500 hover:bg-gold-600 text-navy-900 px-4 py-2 rounded font-bold transition-colors">
                     หน้าหลัก (Dashboard)
                 </button>
                 <button onclick="switchView('edit')" id="btnNavEdit" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">
                     จัดการข้อมูลรายงาน
+                </button>
+                <button onclick="switchView('settings')" id="btnNavSettings" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">
+                    ข้อมูลพื้นฐาน
                 </button>
             </div>
         </div>
@@ -61,16 +64,13 @@
 
         <!-- ================= DASHBOARD VIEW ================= -->
         <div id="viewDashboard" class="flex flex-col flex-grow hidden">
-            
             <!-- Controls: Checkboxes and Date Filter -->
             <div class="bg-white p-4 rounded-lg shadow mb-4 border-l-4 border-gold-500 shrink-0">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <!-- Units Toggles -->
                     <div class="flex items-center gap-4">
                         <span class="font-bold text-navy-800">เลือกหน่วยที่ต้องการแสดง:</span>
-                        <div id="dashboardToggles" class="flex flex-wrap gap-4">
-                            <!-- Checkboxes rendered by JS -->
-                        </div>
+                        <div id="dashboardToggles" class="flex flex-wrap gap-4"></div>
                         <button onclick="checkAllToggles(true)" class="text-sm text-blue-600 hover:underline">เลือกทั้งหมด</button>
                         <button onclick="checkAllToggles(false)" class="text-sm text-red-600 hover:underline">เอาออกทั้งหมด</button>
                     </div>
@@ -87,20 +87,14 @@
             </div>
 
             <!-- Dashboard Grid Container -->
-            <div id="dashboardGrid" class="flex flex-row overflow-x-auto gap-4 pb-4 items-stretch grow h-0 min-h-[500px]">
-                <!-- Boxes rendered by JS -->
-            </div>
-            
+            <div id="dashboardGrid" class="flex flex-row overflow-x-auto gap-4 pb-4 items-stretch grow h-0 min-h-[500px]"></div>
         </div>
 
         <!-- ================= EDIT / ENTRY VIEW ================= -->
         <div id="viewEdit" class="flex-col hidden">
-            
             <!-- Unit Tabs -->
             <div class="bg-navy-800 rounded-t-lg px-4 pt-2 mb-6">
-                <div class="flex space-x-2 overflow-x-auto" id="unitTabs">
-                    <!-- Tabs rendered by JS -->
-                </div>
+                <div class="flex space-x-2 overflow-x-auto" id="unitTabs"></div>
             </div>
 
             <!-- Form Section -->
@@ -123,11 +117,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ผลสัมฤทธิ์ของกิจกรรม</label>
                         <select id="reportStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
-                            <option value="สำเร็จตามเป้าหมาย">สำเร็จตามเป้าหมาย</option>
-                            <option value="สำเร็จบางส่วน">สำเร็จบางส่วน</option>
-                            <option value="อยู่ระหว่างดำเนินการ">อยู่ระหว่างดำเนินการ</option>
-                            <option value="ล่าช้ากว่ากำหนด">ล่าช้ากว่ากำหนด</option>
-                            <option value="ล้มเหลว/ยกเลิก">ล้มเหลว/ยกเลิก</option>
+                            <!-- Options populated by JS -->
                         </select>
                     </div>
                     <div class="md:col-span-3">
@@ -160,19 +150,74 @@
                                 <th class="px-4 py-3 text-center text-xs font-medium uppercase">จัดการ</th>
                             </tr>
                         </thead>
-                        <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
-                            <!-- Table rows populated by JS -->
-                        </tbody>
+                        <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= SETTINGS / MASTER DATA VIEW ================= -->
+        <div id="viewSettings" class="flex-col hidden">
+            
+            <h2 class="text-2xl font-bold text-navy-800 mb-6 border-b-2 border-gold-500 inline-block pb-2">ข้อมูลพื้นฐานของระบบ (Master Data)</h2>
+
+            <!-- Status Settings -->
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200 max-w-2xl">
+                <h3 class="text-xl font-bold mb-4 flex items-center text-navy-800">
+                    <svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    รายการ "ผลสัมฤทธิ์ของกิจกรรม"
+                </h3>
+                
+                <p class="text-sm text-gray-600 mb-4">คุณสามารถเพิ่ม หรือแก้ไขรายการสถานะของกิจกรรมที่ใช้ในตอนกรอกข้อมูลได้ที่นี่</p>
+                
+                <!-- Add New Status Form -->
+                <form id="statusForm" class="flex items-end gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <input type="hidden" id="editingStatusIndex" value="">
+                    <div class="flex-grow">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผลสัมฤทธิ์ (สถานะ)</label>
+                        <input type="text" id="statusNameInput" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="เช่น เลื่อนกำหนดการ...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">สีแถบแสดงผล</label>
+                        <select id="statusColorInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
+                            <option value="green">สีเขียว (สำเร็จ/ดี)</option>
+                            <option value="blue">สีฟ้า (กำลังดำเนินการ)</option>
+                            <option value="indigo">สีน้ำเงิน (อื่นๆ)</option>
+                            <option value="yellow">สีเหลือง (ล่าช้า/ระวัง)</option>
+                            <option value="red">สีแดง (ล้มเหลว/ยกเลิก)</option>
+                            <option value="gray">สีเทา (ทั่วไป)</option>
+                        </select>
+                    </div>
+                    <button type="button" id="btnCancelStatusEdit" onclick="cancelStatusEdit()" class="hidden bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded shadow transition-colors">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" id="btnSubmitStatus" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow transition-colors">
+                        เพิ่มรายการ
+                    </button>
+                </form>
+
+                <!-- List of Statuses -->
+                <div class="overflow-hidden border border-gray-200 rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-navy-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อสถานะ</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ตัวอย่างการแสดงผล</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statusTableBody" class="bg-white divide-y divide-gray-200"></tbody>
                     </table>
                 </div>
             </section>
 
         </div>
+
     </main>
 
     <footer class="bg-navy-900 text-white py-4 mt-auto">
         <div class="container mx-auto px-4 text-center text-sm text-gray-400">
-            &copy; 2026 Wargame Seminar Reporting System. All rights reserved. | <span class="text-gold-500">เวอร์ชัน 2.1 (อัปเดตระบบกรองห้วงวันที่)</span>
+            &copy; 2026 Wargame Seminar Reporting System. All rights reserved. | <span class="text-gold-500">เวอร์ชัน 2.2 (เพิ่มระบบข้อมูลพื้นฐาน)</span>
         </div>
     </footer>
 
@@ -183,6 +228,15 @@
         let currentView = 'dashboard'; 
         let dashboardVisibility = { N1:true, N2:true, N3:true, N4:true, N5:true, N6:true, N7:true };
         
+        // Master Data: Activity Statuses
+        let activityStatuses = [
+            { name: 'สำเร็จตามเป้าหมาย', color: 'green' },
+            { name: 'สำเร็จบางส่วน', color: 'indigo' },
+            { name: 'อยู่ระหว่างดำเนินการ', color: 'blue' },
+            { name: 'ล่าช้ากว่ากำหนด', color: 'yellow' },
+            { name: 'ล้มเหลว/ยกเลิก', color: 'red' }
+        ];
+
         let reports = {
             'N1': [
                 { id: 1, date: '2026-06-09', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย' },
@@ -197,8 +251,11 @@
         // --- DOM Elements ---
         const viewDashboard = document.getElementById('viewDashboard');
         const viewEdit = document.getElementById('viewEdit');
+        const viewSettings = document.getElementById('viewSettings');
         const btnNavDashboard = document.getElementById('btnNavDashboard');
         const btnNavEdit = document.getElementById('btnNavEdit');
+        const btnNavSettings = document.getElementById('btnNavSettings');
+        
         const dashboardGrid = document.getElementById('dashboardGrid');
         const dashboardToggles = document.getElementById('dashboardToggles');
         const unitTabsContainer = document.getElementById('unitTabs');
@@ -206,60 +263,140 @@
         const formTitle = document.getElementById('formTitle');
         const btnSubmitForm = document.getElementById('btnSubmitForm');
         const btnCancelEdit = document.getElementById('btnCancelEdit');
+        const reportStatusSelect = document.getElementById('reportStatus');
+        
+        const statusTableBody = document.getElementById('statusTableBody');
+        const btnSubmitStatus = document.getElementById('btnSubmitStatus');
+        const btnCancelStatusEdit = document.getElementById('btnCancelStatusEdit');
 
         // --- Init ---
         function init() {
             const now = new Date();
             document.getElementById('currentDate').textContent = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
             
+            updateStatusDropdown();
             resetForm();
+            resetStatusForm();
 
             renderDashboardToggles();
             renderDashboard();
             renderEditTabs();
             renderEditTable();
+            renderStatusTable();
             switchView('dashboard');
-        }
-
-        function resetForm() {
-            const now = new Date();
-            document.getElementById('reportDate').valueAsDate = now;
-            document.getElementById('reportTime').value = now.toTimeString().slice(0,5);
-            document.getElementById('reportDetails').value = '';
-            document.getElementById('reportStatus').value = 'สำเร็จตามเป้าหมาย';
-            document.getElementById('editingReportId').value = '';
-            
-            formTitle.innerHTML = `<svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">${currentUnitEdit}</span>`;
-            btnSubmitForm.textContent = 'บันทึกข้อมูล';
-            btnSubmitForm.className = 'bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow transition-colors';
-            btnCancelEdit.classList.add('hidden');
         }
 
         // --- View Switching ---
         function switchView(viewName) {
             currentView = viewName;
+            
+            // Hide all
+            viewDashboard.classList.add('hidden'); viewDashboard.classList.remove('flex');
+            viewEdit.classList.add('hidden'); viewEdit.classList.remove('flex');
+            viewSettings.classList.add('hidden'); viewSettings.classList.remove('flex');
+            
+            // Reset buttons
+            btnNavDashboard.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
+            btnNavEdit.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
+            btnNavSettings.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
+            
+            // Show selected
             if (viewName === 'dashboard') {
-                viewDashboard.classList.remove('hidden');
-                viewDashboard.classList.add('flex');
-                viewEdit.classList.add('hidden');
-                viewEdit.classList.remove('flex');
-                
+                viewDashboard.classList.remove('hidden'); viewDashboard.classList.add('flex');
                 btnNavDashboard.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
-                btnNavEdit.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
-                
                 renderDashboard();
-            } else {
-                viewDashboard.classList.add('hidden');
-                viewDashboard.classList.remove('flex');
-                viewEdit.classList.remove('hidden');
-                viewEdit.classList.add('flex');
-                
-                btnNavDashboard.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
+            } else if (viewName === 'edit') {
+                viewEdit.classList.remove('hidden'); viewEdit.classList.add('flex');
                 btnNavEdit.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
-                
+                updateStatusDropdown();
                 renderEditTable();
+            } else if (viewName === 'settings') {
+                viewSettings.classList.remove('hidden'); viewSettings.classList.add('flex');
+                btnNavSettings.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
+                renderStatusTable();
             }
         }
+
+        // --- Settings (Master Data) Logic ---
+        function updateStatusDropdown() {
+            reportStatusSelect.innerHTML = '';
+            activityStatuses.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.name;
+                opt.textContent = s.name;
+                reportStatusSelect.appendChild(opt);
+            });
+        }
+
+        function renderStatusTable() {
+            statusTableBody.innerHTML = '';
+            activityStatuses.forEach((s, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50";
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm text-gray-900 font-medium">${s.name}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusClasses(s.color)}">${s.name}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center space-x-2 whitespace-nowrap">
+                        <button onclick="editStatus(${index})" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
+                            แก้ไข
+                        </button>
+                        <button onclick="deleteStatus(${index})" class="text-red-600 hover:text-red-800 font-bold text-sm bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition-colors">
+                            ลบ
+                        </button>
+                    </td>
+                `;
+                statusTableBody.appendChild(tr);
+            });
+        }
+
+        function resetStatusForm() {
+            document.getElementById('statusNameInput').value = '';
+            document.getElementById('statusColorInput').value = 'green';
+            document.getElementById('editingStatusIndex').value = '';
+            btnSubmitStatus.textContent = 'เพิ่มรายการ';
+            btnCancelStatusEdit.classList.add('hidden');
+        }
+
+        function cancelStatusEdit() {
+            resetStatusForm();
+        }
+
+        function editStatus(index) {
+            const s = activityStatuses[index];
+            document.getElementById('statusNameInput').value = s.name;
+            document.getElementById('statusColorInput').value = s.color;
+            document.getElementById('editingStatusIndex').value = index;
+            btnSubmitStatus.textContent = 'บันทึกการแก้ไข';
+            btnCancelStatusEdit.classList.remove('hidden');
+        }
+
+        function deleteStatus(index) {
+            if(confirm('หากลบรายการนี้ ข้อมูลรายงานเดิมที่ใช้สถานะนี้จะยังคงอยู่ แต่จะไม่สามารถเลือกสถานะนี้ได้อีก แน่ใจหรือไม่?')) {
+                activityStatuses.splice(index, 1);
+                renderStatusTable();
+            }
+        }
+
+        document.getElementById('statusForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('statusNameInput').value.trim();
+            const color = document.getElementById('statusColorInput').value;
+            const index = document.getElementById('editingStatusIndex').value;
+            
+            if (!name) return;
+
+            if (index !== '') {
+                activityStatuses[index] = { name, color };
+            } else {
+                activityStatuses.push({ name, color });
+            }
+            
+            resetStatusForm();
+            renderStatusTable();
+        });
 
         // --- Dashboard Logic ---
         function renderDashboardToggles() {
@@ -320,7 +457,6 @@
                     filteredReports = filteredReports.filter(r => r.date <= endDateFilter);
                 }
 
-                // Header
                 let headerHtml = `
                     <div class="bg-navy-700 text-white px-4 py-3 rounded-t-lg flex justify-between items-center shrink-0">
                         <span class="font-bold text-lg">หน่วย ${unit}</span>
@@ -328,7 +464,6 @@
                     </div>
                 `;
                 
-                // Content
                 let contentHtml = `<div class="p-4 flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-3">`;
                 
                 if (filteredReports.length === 0) {
@@ -341,12 +476,14 @@
                     });
 
                     sorted.forEach(rep => {
-                        const statusColor = getStatusColor(rep.status);
+                        const sConf = activityStatuses.find(s => s.name === rep.status);
+                        const statusColorClass = sConf ? getStatusClasses(sConf.color) : getStatusClasses('gray');
+                        
                         contentHtml += `
                             <div class="border-l-4 border-navy-500 pl-3 py-1 bg-gray-50 rounded-r-md">
                                 <div class="text-xs text-gray-500 mb-1"><span class="font-bold text-navy-600">${formatDate(rep.date)}</span> • ${rep.time} น.</div>
                                 <div class="text-sm text-gray-800 mb-2">${rep.details}</div>
-                                <span class="px-2 py-0.5 inline-flex text-[11px] leading-4 font-semibold rounded ${statusColor}">${rep.status}</span>
+                                <span class="px-2 py-0.5 inline-flex text-[11px] leading-4 font-semibold rounded ${statusColorClass}">${rep.status}</span>
                             </div>
                         `;
                     });
@@ -381,6 +518,22 @@
             document.getElementById('tableUnitLabel').textContent = currentUnitEdit;
         }
 
+        function resetForm() {
+            const now = new Date();
+            document.getElementById('reportDate').valueAsDate = now;
+            document.getElementById('reportTime').value = now.toTimeString().slice(0,5);
+            document.getElementById('reportDetails').value = '';
+            if(activityStatuses.length > 0) {
+                document.getElementById('reportStatus').value = activityStatuses[0].name;
+            }
+            document.getElementById('editingReportId').value = '';
+            
+            formTitle.innerHTML = `<svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">${currentUnitEdit}</span>`;
+            btnSubmitForm.textContent = 'บันทึกข้อมูล';
+            btnSubmitForm.className = 'bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow transition-colors';
+            btnCancelEdit.classList.add('hidden');
+        }
+
         function renderEditTable() {
             reportTableBody.innerHTML = '';
             const data = reports[currentUnitEdit] || [];
@@ -395,7 +548,9 @@
             sorted.forEach(rep => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50";
-                const statusColor = getStatusColor(rep.status);
+                
+                const sConf = activityStatuses.find(s => s.name === rep.status);
+                const statusColorClass = sConf ? getStatusClasses(sConf.color) : getStatusClasses('gray');
                 
                 tr.innerHTML = `
                     <td class="px-4 py-3 text-sm text-gray-900">
@@ -404,7 +559,7 @@
                     </td>
                     <td class="px-4 py-3 text-sm text-gray-800">${rep.details}</td>
                     <td class="px-4 py-3 text-sm">
-                        <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${statusColor}">${rep.status}</span>
+                        <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${statusColorClass}">${rep.status}</span>
                     </td>
                     <td class="px-4 py-3 text-center space-x-2 whitespace-nowrap">
                         <button onclick="editReport('${currentUnitEdit}', ${rep.id})" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
@@ -429,13 +584,11 @@
             const editId = document.getElementById('editingReportId').value;
             
             if (editId) {
-                // Update existing
                 const index = reports[currentUnitEdit].findIndex(r => r.id == editId);
                 if (index !== -1) {
                     reports[currentUnitEdit][index] = { id: parseInt(editId), date, time, details, status };
                 }
             } else {
-                // Add new
                 reports[currentUnitEdit].push({ id: Date.now(), date, time, details, status });
             }
             
@@ -451,6 +604,17 @@
                 document.getElementById('reportDate').value = report.date;
                 document.getElementById('reportTime').value = report.time;
                 document.getElementById('reportDetails').value = report.details;
+                
+                // Ensure option exists or add it temporarily
+                let exists = false;
+                for (let i = 0; i < reportStatusSelect.options.length; i++) {
+                    if (reportStatusSelect.options[i].value === report.status) exists = true;
+                }
+                if(!exists) {
+                    const opt = document.createElement('option');
+                    opt.value = report.status; opt.textContent = report.status;
+                    reportStatusSelect.appendChild(opt);
+                }
                 document.getElementById('reportStatus').value = report.status;
                 
                 formTitle.innerHTML = `<svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> แก้ไขรายงาน: หน่วย <span id="formUnitLabel" class="text-blue-600 ml-1">${unit}</span>`;
@@ -475,12 +639,16 @@
         }
 
         // --- Helpers ---
-        function getStatusColor(status) {
-            if(status === 'สำเร็จตามเป้าหมาย') return 'bg-green-100 text-green-800 border border-green-200';
-            if(status === 'อยู่ระหว่างดำเนินการ') return 'bg-blue-100 text-blue-800 border border-blue-200';
-            if(status === 'สำเร็จบางส่วน') return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
-            if(status === 'ล่าช้ากว่ากำหนด') return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
-            return 'bg-red-100 text-red-800 border border-red-200';
+        function getStatusClasses(color) {
+            const colors = {
+                green: 'bg-green-100 text-green-800 border border-green-200',
+                blue: 'bg-blue-100 text-blue-800 border border-blue-200',
+                indigo: 'bg-indigo-100 text-indigo-800 border border-indigo-200',
+                yellow: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                red: 'bg-red-100 text-red-800 border border-red-200',
+                gray: 'bg-gray-100 text-gray-800 border border-gray-200'
+            };
+            return colors[color] || colors.gray;
         }
 
         function formatDate(dateStr) {
