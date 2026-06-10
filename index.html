@@ -41,7 +41,7 @@
                 </svg>
                 <div>
                     <h1 class="text-2xl font-bold tracking-wide">ระบบรายงานสถานการณ์ Wargame</h1>
-                    <p class="text-sm text-gold-400">โรงเรียนเสนาธิการทหารเรือ</p>
+                    <p class="text-sm text-gold-400">โรงเรียนเสนาธิการทหารเรือ <span class="ml-2 px-2 py-0.5 bg-navy-700 rounded text-xs">เวอร์ชัน 2.0 (ล่าสุด)</span></p>
                 </div>
             </div>
             <div class="flex items-center space-x-6">
@@ -62,14 +62,26 @@
         <!-- ================= DASHBOARD VIEW ================= -->
         <div id="viewDashboard" class="flex flex-col flex-grow hidden">
             
-            <!-- Checkboxes for N1-N7 -->
-            <div class="bg-white p-4 rounded-lg shadow mb-4 flex flex-wrap items-center gap-4 border-l-4 border-gold-500 shrink-0">
-                <span class="font-bold text-navy-800 mr-2">เลือกหน่วยที่ต้องการแสดง:</span>
-                <div id="dashboardToggles" class="flex flex-wrap gap-4">
-                    <!-- Checkboxes rendered by JS -->
+            <!-- Controls: Checkboxes and Date Filter -->
+            <div class="bg-white p-4 rounded-lg shadow mb-4 border-l-4 border-gold-500 shrink-0">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <!-- Units Toggles -->
+                    <div class="flex items-center gap-4">
+                        <span class="font-bold text-navy-800">เลือกหน่วยที่ต้องการแสดง:</span>
+                        <div id="dashboardToggles" class="flex flex-wrap gap-4">
+                            <!-- Checkboxes rendered by JS -->
+                        </div>
+                        <button onclick="checkAllToggles(true)" class="text-sm text-blue-600 hover:underline">เลือกทั้งหมด</button>
+                        <button onclick="checkAllToggles(false)" class="text-sm text-red-600 hover:underline">เอาออกทั้งหมด</button>
+                    </div>
+                    
+                    <!-- Date Filter -->
+                    <div class="flex items-center space-x-3 bg-gray-50 px-3 py-2 rounded border border-gray-200">
+                        <label class="text-sm font-bold text-navy-800">แสดงตั้งแต่เริ่มวันที่:</label>
+                        <input type="date" id="dashboardStartDate" onchange="renderDashboard()" class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-navy-500">
+                        <button onclick="clearDateFilter()" class="text-xs text-gray-500 hover:text-red-500">ล้างตัวกรอง</button>
+                    </div>
                 </div>
-                <button onclick="checkAllToggles(true)" class="text-sm text-blue-600 hover:underline ml-auto">เลือกทั้งหมด</button>
-                <button onclick="checkAllToggles(false)" class="text-sm text-red-600 hover:underline">เอาออกทั้งหมด</button>
             </div>
 
             <!-- Dashboard Grid Container -->
@@ -90,12 +102,14 @@
             </div>
 
             <!-- Form Section -->
-            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-gold-500">
-                <h2 class="text-xl font-bold mb-4 flex items-center text-navy-800">
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-gold-500 relative">
+                <h2 class="text-xl font-bold mb-4 flex items-center text-navy-800" id="formTitle">
                     <svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">N1</span>
                 </h2>
+                
                 <form id="reportForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <input type="hidden" id="editingReportId" value="">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">วันที่ปฏิบัติการ</label>
                         <input type="date" id="reportDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
@@ -118,8 +132,11 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">สถานการณ์ปฏิบัติการ</label>
                         <textarea id="reportDetails" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="อธิบายรายละเอียดการปฏิบัติการ..."></textarea>
                     </div>
-                    <div class="md:col-span-3 flex justify-end">
-                        <button type="submit" class="bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow">
+                    <div class="md:col-span-3 flex justify-end space-x-3">
+                        <button type="button" id="btnCancelEdit" onclick="cancelEdit()" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded shadow transition-colors">
+                            ยกเลิกการแก้ไข
+                        </button>
+                        <button type="submit" id="btnSubmitForm" class="bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow transition-colors">
                             บันทึกข้อมูล
                         </button>
                     </div>
@@ -151,6 +168,12 @@
         </div>
     </main>
 
+    <footer class="bg-navy-900 text-white py-4 mt-auto">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-400">
+            &copy; 2026 Wargame Seminar Reporting System. All rights reserved. | <span class="text-gold-500">เวอร์ชัน 2.0 (อัปเดตระบบแก้ไขข้อมูลและกรองวันที่)</span>
+        </div>
+    </footer>
+
     <script>
         // --- Data Model ---
         const units = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7'];
@@ -160,7 +183,7 @@
         
         let reports = {
             'N1': [
-                { id: 1, date: '2026-06-10', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย' },
+                { id: 1, date: '2026-06-09', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย' },
                 { id: 2, date: '2026-06-10', time: '14:30', details: 'ลาดตระเวนทางทะเลตามพิกัดเป้าหมาย', status: 'อยู่ระหว่างดำเนินการ' }
             ],
             'N2': [
@@ -174,27 +197,40 @@
         const viewEdit = document.getElementById('viewEdit');
         const btnNavDashboard = document.getElementById('btnNavDashboard');
         const btnNavEdit = document.getElementById('btnNavEdit');
-
         const dashboardGrid = document.getElementById('dashboardGrid');
         const dashboardToggles = document.getElementById('dashboardToggles');
-
         const unitTabsContainer = document.getElementById('unitTabs');
         const reportTableBody = document.getElementById('reportTableBody');
+        const formTitle = document.getElementById('formTitle');
+        const btnSubmitForm = document.getElementById('btnSubmitForm');
+        const btnCancelEdit = document.getElementById('btnCancelEdit');
 
         // --- Init ---
         function init() {
             const now = new Date();
             document.getElementById('currentDate').textContent = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
             
-            // Set input defaults
-            document.getElementById('reportDate').valueAsDate = now;
-            document.getElementById('reportTime').value = now.toTimeString().slice(0,5);
+            resetForm();
 
             renderDashboardToggles();
             renderDashboard();
             renderEditTabs();
             renderEditTable();
             switchView('dashboard');
+        }
+
+        function resetForm() {
+            const now = new Date();
+            document.getElementById('reportDate').valueAsDate = now;
+            document.getElementById('reportTime').value = now.toTimeString().slice(0,5);
+            document.getElementById('reportDetails').value = '';
+            document.getElementById('reportStatus').value = 'สำเร็จตามเป้าหมาย';
+            document.getElementById('editingReportId').value = '';
+            
+            formTitle.innerHTML = `<svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">${currentUnitEdit}</span>`;
+            btnSubmitForm.textContent = 'บันทึกข้อมูล';
+            btnSubmitForm.className = 'bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow transition-colors';
+            btnCancelEdit.classList.add('hidden');
         }
 
         // --- View Switching ---
@@ -249,43 +285,52 @@
             renderDashboardToggles();
             renderDashboard();
         }
+        
+        function clearDateFilter() {
+            document.getElementById('dashboardStartDate').value = '';
+            renderDashboard();
+        }
 
         function renderDashboard() {
             dashboardGrid.innerHTML = '';
-            
             const visibleUnits = units.filter(u => dashboardVisibility[u]);
+            const startDateFilter = document.getElementById('dashboardStartDate').value;
             
             if (visibleUnits.length === 0) {
                 dashboardGrid.innerHTML = `<div class="w-full text-center py-10 text-gray-500">ไม่ได้เลือกหน่วยใดเลย</div>`;
                 return;
             }
 
-            // Calculate width for boxes to fit nicely or scroll
             const minWidth = "min-w-[300px] w-[350px]";
 
             visibleUnits.forEach(unit => {
                 const box = document.createElement('div');
                 box.className = `${minWidth} flex-shrink-0 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col h-full`;
                 
+                // Filter by date if selected
+                let filteredReports = reports[unit];
+                if (startDateFilter) {
+                    filteredReports = filteredReports.filter(r => r.date >= startDateFilter);
+                }
+
                 // Header
                 let headerHtml = `
                     <div class="bg-navy-700 text-white px-4 py-3 rounded-t-lg flex justify-between items-center shrink-0">
                         <span class="font-bold text-lg">หน่วย ${unit}</span>
-                        <span class="bg-gold-500 text-navy-900 text-xs font-bold px-2 py-1 rounded-full">${reports[unit].length} รายการ</span>
+                        <span class="bg-gold-500 text-navy-900 text-xs font-bold px-2 py-1 rounded-full">${filteredReports.length} รายการ</span>
                     </div>
                 `;
                 
                 // Content
                 let contentHtml = `<div class="p-4 flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-3">`;
                 
-                if (reports[unit].length === 0) {
-                    contentHtml += `<div class="text-center text-gray-400 py-10">ไม่มีข้อมูลสถานการณ์</div>`;
+                if (filteredReports.length === 0) {
+                    contentHtml += `<div class="text-center text-gray-400 py-10">ไม่มีข้อมูลในช่วงเวลานี้</div>`;
                 } else {
-                    // Sort descending (Latest first)
-                    const sorted = [...reports[unit]].sort((a,b) => {
+                    const sorted = [...filteredReports].sort((a,b) => {
                         const dtA = new Date(`${a.date}T${a.time}`);
                         const dtB = new Date(`${b.date}T${b.time}`);
-                        return dtB - dtA;
+                        return dtB - dtA; // Latest first
                     });
 
                     sorted.forEach(rep => {
@@ -316,6 +361,7 @@
                                  ${isActive ? 'tab-active bg-navy-700 rounded-t-lg' : 'tab-inactive hover:bg-navy-700 rounded-t-lg'}`;
                 btn.textContent = `หน่วย ${unit}`;
                 btn.onclick = () => {
+                    cancelEdit();
                     currentUnitEdit = unit;
                     document.getElementById('formUnitLabel').textContent = unit;
                     document.getElementById('tableUnitLabel').textContent = unit;
@@ -337,7 +383,6 @@
                 return;
             }
             
-            // Sort descending
             const sorted = [...data].sort((a,b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
             
             sorted.forEach(rep => {
@@ -354,8 +399,11 @@
                     <td class="px-4 py-3 text-sm">
                         <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${statusColor}">${rep.status}</span>
                     </td>
-                    <td class="px-4 py-3 text-center">
-                        <button onclick="deleteReport('${currentUnitEdit}', ${rep.id})" class="text-red-500 hover:text-red-700 font-bold text-sm bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition-colors">
+                    <td class="px-4 py-3 text-center space-x-2 whitespace-nowrap">
+                        <button onclick="editReport('${currentUnitEdit}', ${rep.id})" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
+                            แก้ไข
+                        </button>
+                        <button onclick="deleteReport('${currentUnitEdit}', ${rep.id})" class="text-red-600 hover:text-red-800 font-bold text-sm bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition-colors">
                             ลบ
                         </button>
                     </td>
@@ -371,16 +419,46 @@
             const time = document.getElementById('reportTime').value;
             const details = document.getElementById('reportDetails').value;
             const status = document.getElementById('reportStatus').value;
+            const editId = document.getElementById('editingReportId').value;
             
-            reports[currentUnitEdit].push({
-                id: Date.now(),
-                date, time, details, status
-            });
+            if (editId) {
+                // Update existing
+                const index = reports[currentUnitEdit].findIndex(r => r.id == editId);
+                if (index !== -1) {
+                    reports[currentUnitEdit][index] = { id: parseInt(editId), date, time, details, status };
+                }
+            } else {
+                // Add new
+                reports[currentUnitEdit].push({ id: Date.now(), date, time, details, status });
+            }
             
-            document.getElementById('reportDetails').value = '';
+            resetForm();
             renderEditTable();
-            if(currentView === 'dashboard') renderDashboard(); // Update dashboard if needed
+            if(currentView === 'dashboard') renderDashboard();
         });
+
+        function editReport(unit, id) {
+            const report = reports[unit].find(r => r.id === id);
+            if (report) {
+                document.getElementById('editingReportId').value = report.id;
+                document.getElementById('reportDate').value = report.date;
+                document.getElementById('reportTime').value = report.time;
+                document.getElementById('reportDetails').value = report.details;
+                document.getElementById('reportStatus').value = report.status;
+                
+                formTitle.innerHTML = `<svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> แก้ไขรายงาน: หน่วย <span id="formUnitLabel" class="text-blue-600 ml-1">${unit}</span>`;
+                btnSubmitForm.textContent = 'บันทึกการแก้ไข';
+                btnSubmitForm.className = 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded shadow transition-colors';
+                btnCancelEdit.classList.remove('hidden');
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function cancelEdit() {
+            resetForm();
+        }
 
         function deleteReport(unit, id) {
             if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายงานนี้?')) {
