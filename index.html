@@ -41,7 +41,7 @@
                 </svg>
                 <div>
                     <h1 class="text-2xl font-bold tracking-wide">ระบบรายงานสถานการณ์ Wargame</h1>
-                    <p class="text-sm text-gold-400">โรงเรียนเสนาธิการทหารเรือ <span class="ml-2 px-2 py-0.5 bg-navy-700 rounded text-xs">เวอร์ชัน 2.0 (ล่าสุด)</span></p>
+                    <p class="text-sm text-gold-400">โรงเรียนเสนาธิการทหารเรือ <span class="ml-2 px-2 py-0.5 bg-navy-700 rounded text-xs">เวอร์ชัน 2.1 (ช่วงวันที่)</span></p>
                 </div>
             </div>
             <div class="flex items-center space-x-6">
@@ -64,7 +64,7 @@
             
             <!-- Controls: Checkboxes and Date Filter -->
             <div class="bg-white p-4 rounded-lg shadow mb-4 border-l-4 border-gold-500 shrink-0">
-                <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <!-- Units Toggles -->
                     <div class="flex items-center gap-4">
                         <span class="font-bold text-navy-800">เลือกหน่วยที่ต้องการแสดง:</span>
@@ -75,11 +75,13 @@
                         <button onclick="checkAllToggles(false)" class="text-sm text-red-600 hover:underline">เอาออกทั้งหมด</button>
                     </div>
                     
-                    <!-- Date Filter -->
-                    <div class="flex items-center space-x-3 bg-gray-50 px-3 py-2 rounded border border-gray-200">
-                        <label class="text-sm font-bold text-navy-800">แสดงตั้งแต่เริ่มวันที่:</label>
+                    <!-- Date Range Filter -->
+                    <div class="flex flex-wrap items-center space-x-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
+                        <label class="text-sm font-bold text-navy-800">แสดงข้อมูลห้วงวันที่:</label>
                         <input type="date" id="dashboardStartDate" onchange="renderDashboard()" class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-navy-500">
-                        <button onclick="clearDateFilter()" class="text-xs text-gray-500 hover:text-red-500">ล้างตัวกรอง</button>
+                        <span class="text-sm text-gray-500">ถึง</span>
+                        <input type="date" id="dashboardEndDate" onchange="renderDashboard()" class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-navy-500">
+                        <button onclick="clearDateFilter()" class="text-xs text-gray-500 hover:text-red-500 ml-2">ล้างตัวกรอง</button>
                     </div>
                 </div>
             </div>
@@ -170,7 +172,7 @@
 
     <footer class="bg-navy-900 text-white py-4 mt-auto">
         <div class="container mx-auto px-4 text-center text-sm text-gray-400">
-            &copy; 2026 Wargame Seminar Reporting System. All rights reserved. | <span class="text-gold-500">เวอร์ชัน 2.0 (อัปเดตระบบแก้ไขข้อมูลและกรองวันที่)</span>
+            &copy; 2026 Wargame Seminar Reporting System. All rights reserved. | <span class="text-gold-500">เวอร์ชัน 2.1 (อัปเดตระบบกรองห้วงวันที่)</span>
         </div>
     </footer>
 
@@ -288,6 +290,7 @@
         
         function clearDateFilter() {
             document.getElementById('dashboardStartDate').value = '';
+            document.getElementById('dashboardEndDate').value = '';
             renderDashboard();
         }
 
@@ -295,6 +298,7 @@
             dashboardGrid.innerHTML = '';
             const visibleUnits = units.filter(u => dashboardVisibility[u]);
             const startDateFilter = document.getElementById('dashboardStartDate').value;
+            const endDateFilter = document.getElementById('dashboardEndDate').value;
             
             if (visibleUnits.length === 0) {
                 dashboardGrid.innerHTML = `<div class="w-full text-center py-10 text-gray-500">ไม่ได้เลือกหน่วยใดเลย</div>`;
@@ -307,10 +311,13 @@
                 const box = document.createElement('div');
                 box.className = `${minWidth} flex-shrink-0 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col h-full`;
                 
-                // Filter by date if selected
+                // Filter by date range if selected
                 let filteredReports = reports[unit];
                 if (startDateFilter) {
                     filteredReports = filteredReports.filter(r => r.date >= startDateFilter);
+                }
+                if (endDateFilter) {
+                    filteredReports = filteredReports.filter(r => r.date <= endDateFilter);
                 }
 
                 // Header
@@ -451,7 +458,6 @@
                 btnSubmitForm.className = 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded shadow transition-colors';
                 btnCancelEdit.classList.remove('hidden');
                 
-                // Scroll to top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
