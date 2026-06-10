@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรายงานสถานการณ์ Wargame</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: { 50: '#f0f4f8', 100: '#d9e2ec', 500: '#334e68', 700: '#102a43', 800: '#0b1f33', 900: '#061323' },
+                        gold: { 400: '#f6e05e', 500: '#ecc94b', 600: '#d69e2e' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f4f8; }
+        .tab-active { border-bottom: 4px solid #ecc94b; color: #ecc94b; font-weight: bold; }
+        .tab-inactive { color: #d9e2ec; }
+        .tab-inactive:hover { color: #ffffff; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-navy-900">
+
+    <!-- Header -->
+    <header class="bg-navy-800 text-white shadow-lg shrink-0">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                </svg>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wide">ระบบรายงานสถานการณ์ Wargame</h1>
+                    <p class="text-sm text-gold-400">โรงเรียนเสนาธิการทหารเรือ</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <span class="text-sm">วันที่: <span id="currentDate"></span></span>
+                <!-- View Switch Buttons -->
+                <button onclick="switchView('dashboard')" id="btnNavDashboard" class="bg-gold-500 hover:bg-gold-600 text-navy-900 px-4 py-2 rounded font-bold transition-colors">
+                    หน้าหลัก (Dashboard)
+                </button>
+                <button onclick="switchView('edit')" id="btnNavEdit" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">
+                    จัดการข้อมูลรายงาน
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-6 flex flex-col h-full">
+
+        <!-- ================= DASHBOARD VIEW ================= -->
+        <div id="viewDashboard" class="flex flex-col flex-grow hidden">
+            
+            <!-- Checkboxes for N1-N7 -->
+            <div class="bg-white p-4 rounded-lg shadow mb-4 flex flex-wrap items-center gap-4 border-l-4 border-gold-500 shrink-0">
+                <span class="font-bold text-navy-800 mr-2">เลือกหน่วยที่ต้องการแสดง:</span>
+                <div id="dashboardToggles" class="flex flex-wrap gap-4">
+                    <!-- Checkboxes rendered by JS -->
+                </div>
+                <button onclick="checkAllToggles(true)" class="text-sm text-blue-600 hover:underline ml-auto">เลือกทั้งหมด</button>
+                <button onclick="checkAllToggles(false)" class="text-sm text-red-600 hover:underline">เอาออกทั้งหมด</button>
+            </div>
+
+            <!-- Dashboard Grid Container -->
+            <div id="dashboardGrid" class="flex flex-row overflow-x-auto gap-4 pb-4 items-stretch grow h-0 min-h-[500px]">
+                <!-- Boxes rendered by JS -->
+            </div>
+            
+        </div>
+
+        <!-- ================= EDIT / ENTRY VIEW ================= -->
+        <div id="viewEdit" class="flex-col hidden">
+            
+            <!-- Unit Tabs -->
+            <div class="bg-navy-800 rounded-t-lg px-4 pt-2 mb-6">
+                <div class="flex space-x-2 overflow-x-auto" id="unitTabs">
+                    <!-- Tabs rendered by JS -->
+                </div>
+            </div>
+
+            <!-- Form Section -->
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-gold-500">
+                <h2 class="text-xl font-bold mb-4 flex items-center text-navy-800">
+                    <svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">N1</span>
+                </h2>
+                <form id="reportForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">วันที่ปฏิบัติการ</label>
+                        <input type="date" id="reportDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">เวลา</label>
+                        <input type="time" id="reportTime" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ผลสัมฤทธิ์ของกิจกรรม</label>
+                        <select id="reportStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
+                            <option value="สำเร็จตามเป้าหมาย">สำเร็จตามเป้าหมาย</option>
+                            <option value="สำเร็จบางส่วน">สำเร็จบางส่วน</option>
+                            <option value="อยู่ระหว่างดำเนินการ">อยู่ระหว่างดำเนินการ</option>
+                            <option value="ล่าช้ากว่ากำหนด">ล่าช้ากว่ากำหนด</option>
+                            <option value="ล้มเหลว/ยกเลิก">ล้มเหลว/ยกเลิก</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">สถานการณ์ปฏิบัติการ</label>
+                        <textarea id="reportDetails" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="อธิบายรายละเอียดการปฏิบัติการ..."></textarea>
+                    </div>
+                    <div class="md:col-span-3 flex justify-end">
+                        <button type="submit" class="bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow">
+                            บันทึกข้อมูล
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Table Section -->
+            <section class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                <div class="bg-navy-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-navy-800">รายการปฏิบัติการทั้งหมด: หน่วย <span id="tableUnitLabel" class="text-gold-600">N1</span></h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-navy-700 text-white">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase">วัน/เวลา</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase w-1/2">สถานการณ์ปฏิบัติการ</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase">ผลสัมฤทธิ์</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium uppercase">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        // --- Data Model ---
+        const units = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7'];
+        let currentUnitEdit = 'N1';
+        let currentView = 'dashboard'; 
+        let dashboardVisibility = { N1:true, N2:true, N3:true, N4:true, N5:true, N6:true, N7:true };
+        
+        let reports = {
+            'N1': [
+                { id: 1, date: '2026-06-10', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย' },
+                { id: 2, date: '2026-06-10', time: '14:30', details: 'ลาดตระเวนทางทะเลตามพิกัดเป้าหมาย', status: 'อยู่ระหว่างดำเนินการ' }
+            ],
+            'N2': [
+                { id: 3, date: '2026-06-10', time: '09:00', details: 'เตรียมพร้อมเรือรบและอากาศยาน', status: 'สำเร็จตามเป้าหมาย' }
+            ],
+            'N3': [], 'N4': [], 'N5': [], 'N6': [], 'N7': []
+        };
+
+        // --- DOM Elements ---
+        const viewDashboard = document.getElementById('viewDashboard');
+        const viewEdit = document.getElementById('viewEdit');
+        const btnNavDashboard = document.getElementById('btnNavDashboard');
+        const btnNavEdit = document.getElementById('btnNavEdit');
+
+        const dashboardGrid = document.getElementById('dashboardGrid');
+        const dashboardToggles = document.getElementById('dashboardToggles');
+
+        const unitTabsContainer = document.getElementById('unitTabs');
+        const reportTableBody = document.getElementById('reportTableBody');
+
+        // --- Init ---
+        function init() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // Set input defaults
+            document.getElementById('reportDate').valueAsDate = now;
+            document.getElementById('reportTime').value = now.toTimeString().slice(0,5);
+
+            renderDashboardToggles();
+            renderDashboard();
+            renderEditTabs();
+            renderEditTable();
+            switchView('dashboard');
+        }
+
+        // --- View Switching ---
+        function switchView(viewName) {
+            currentView = viewName;
+            if (viewName === 'dashboard') {
+                viewDashboard.classList.remove('hidden');
+                viewDashboard.classList.add('flex');
+                viewEdit.classList.add('hidden');
+                viewEdit.classList.remove('flex');
+                
+                btnNavDashboard.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
+                btnNavEdit.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
+                
+                renderDashboard();
+            } else {
+                viewDashboard.classList.add('hidden');
+                viewDashboard.classList.remove('flex');
+                viewEdit.classList.remove('hidden');
+                viewEdit.classList.add('flex');
+                
+                btnNavDashboard.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
+                btnNavEdit.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
+                
+                renderEditTable();
+            }
+        }
+
+        // --- Dashboard Logic ---
+        function renderDashboardToggles() {
+            dashboardToggles.innerHTML = '';
+            units.forEach(unit => {
+                const label = document.createElement('label');
+                label.className = "flex items-center space-x-2 cursor-pointer";
+                label.innerHTML = `
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-navy-600 rounded" 
+                           ${dashboardVisibility[unit] ? 'checked' : ''} 
+                           onchange="toggleDashboardUnit('${unit}', this.checked)">
+                    <span class="text-navy-800 font-medium">${unit}</span>
+                `;
+                dashboardToggles.appendChild(label);
+            });
+        }
+
+        function toggleDashboardUnit(unit, isChecked) {
+            dashboardVisibility[unit] = isChecked;
+            renderDashboard();
+        }
+
+        function checkAllToggles(checked) {
+            units.forEach(u => dashboardVisibility[u] = checked);
+            renderDashboardToggles();
+            renderDashboard();
+        }
+
+        function renderDashboard() {
+            dashboardGrid.innerHTML = '';
+            
+            const visibleUnits = units.filter(u => dashboardVisibility[u]);
+            
+            if (visibleUnits.length === 0) {
+                dashboardGrid.innerHTML = `<div class="w-full text-center py-10 text-gray-500">ไม่ได้เลือกหน่วยใดเลย</div>`;
+                return;
+            }
+
+            // Calculate width for boxes to fit nicely or scroll
+            const minWidth = "min-w-[300px] w-[350px]";
+
+            visibleUnits.forEach(unit => {
+                const box = document.createElement('div');
+                box.className = `${minWidth} flex-shrink-0 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col h-full`;
+                
+                // Header
+                let headerHtml = `
+                    <div class="bg-navy-700 text-white px-4 py-3 rounded-t-lg flex justify-between items-center shrink-0">
+                        <span class="font-bold text-lg">หน่วย ${unit}</span>
+                        <span class="bg-gold-500 text-navy-900 text-xs font-bold px-2 py-1 rounded-full">${reports[unit].length} รายการ</span>
+                    </div>
+                `;
+                
+                // Content
+                let contentHtml = `<div class="p-4 flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-3">`;
+                
+                if (reports[unit].length === 0) {
+                    contentHtml += `<div class="text-center text-gray-400 py-10">ไม่มีข้อมูลสถานการณ์</div>`;
+                } else {
+                    // Sort descending (Latest first)
+                    const sorted = [...reports[unit]].sort((a,b) => {
+                        const dtA = new Date(`${a.date}T${a.time}`);
+                        const dtB = new Date(`${b.date}T${b.time}`);
+                        return dtB - dtA;
+                    });
+
+                    sorted.forEach(rep => {
+                        const statusColor = getStatusColor(rep.status);
+                        contentHtml += `
+                            <div class="border-l-4 border-navy-500 pl-3 py-1 bg-gray-50 rounded-r-md">
+                                <div class="text-xs text-gray-500 mb-1"><span class="font-bold text-navy-600">${formatDate(rep.date)}</span> • ${rep.time} น.</div>
+                                <div class="text-sm text-gray-800 mb-2">${rep.details}</div>
+                                <span class="px-2 py-0.5 inline-flex text-[11px] leading-4 font-semibold rounded ${statusColor}">${rep.status}</span>
+                            </div>
+                        `;
+                    });
+                }
+                
+                contentHtml += `</div>`;
+                box.innerHTML = headerHtml + contentHtml;
+                dashboardGrid.appendChild(box);
+            });
+        }
+
+        // --- Edit Logic ---
+        function renderEditTabs() {
+            unitTabsContainer.innerHTML = '';
+            units.forEach(unit => {
+                const btn = document.createElement('button');
+                const isActive = unit === currentUnitEdit;
+                btn.className = `px-6 py-3 text-sm font-medium transition-colors focus:outline-none 
+                                 ${isActive ? 'tab-active bg-navy-700 rounded-t-lg' : 'tab-inactive hover:bg-navy-700 rounded-t-lg'}`;
+                btn.textContent = `หน่วย ${unit}`;
+                btn.onclick = () => {
+                    currentUnitEdit = unit;
+                    document.getElementById('formUnitLabel').textContent = unit;
+                    document.getElementById('tableUnitLabel').textContent = unit;
+                    renderEditTabs();
+                    renderEditTable();
+                };
+                unitTabsContainer.appendChild(btn);
+            });
+            document.getElementById('formUnitLabel').textContent = currentUnitEdit;
+            document.getElementById('tableUnitLabel').textContent = currentUnitEdit;
+        }
+
+        function renderEditTable() {
+            reportTableBody.innerHTML = '';
+            const data = reports[currentUnitEdit] || [];
+            
+            if (data.length === 0) {
+                reportTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500">ไม่มีข้อมูล</td></tr>`;
+                return;
+            }
+            
+            // Sort descending
+            const sorted = [...data].sort((a,b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
+            
+            sorted.forEach(rep => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50";
+                const statusColor = getStatusColor(rep.status);
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm text-gray-900">
+                        <div class="font-medium">${formatDate(rep.date)}</div>
+                        <div class="text-xs text-gray-500">${rep.time} น.</div>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-800">${rep.details}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${statusColor}">${rep.status}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteReport('${currentUnitEdit}', ${rep.id})" class="text-red-500 hover:text-red-700 font-bold text-sm bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition-colors">
+                            ลบ
+                        </button>
+                    </td>
+                `;
+                reportTableBody.appendChild(tr);
+            });
+        }
+
+        // --- Actions ---
+        document.getElementById('reportForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const date = document.getElementById('reportDate').value;
+            const time = document.getElementById('reportTime').value;
+            const details = document.getElementById('reportDetails').value;
+            const status = document.getElementById('reportStatus').value;
+            
+            reports[currentUnitEdit].push({
+                id: Date.now(),
+                date, time, details, status
+            });
+            
+            document.getElementById('reportDetails').value = '';
+            renderEditTable();
+            if(currentView === 'dashboard') renderDashboard(); // Update dashboard if needed
+        });
+
+        function deleteReport(unit, id) {
+            if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายงานนี้?')) {
+                reports[unit] = reports[unit].filter(r => r.id !== id);
+                renderEditTable();
+                if(currentView === 'dashboard') renderDashboard();
+            }
+        }
+
+        // --- Helpers ---
+        function getStatusColor(status) {
+            if(status === 'สำเร็จตามเป้าหมาย') return 'bg-green-100 text-green-800 border border-green-200';
+            if(status === 'อยู่ระหว่างดำเนินการ') return 'bg-blue-100 text-blue-800 border border-blue-200';
+            if(status === 'สำเร็จบางส่วน') return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
+            if(status === 'ล่าช้ากว่ากำหนด') return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+            return 'bg-red-100 text-red-800 border border-red-200';
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric' });
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
