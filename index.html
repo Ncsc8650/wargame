@@ -232,6 +232,26 @@
                     </table>
                 </div>
             </section>
+
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200 max-w-3xl">
+                <h3 class="text-xl font-bold mb-4 text-navy-800">ตารางชื่อหน่วย</h3>
+                <form id="unitLabelsForm" class="space-y-3">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">รหัสหน่วย</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อภาษาไทย</th>
+                                </tr>
+                            </thead>
+                            <tbody id="unitLabelsTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow">บันทึกชื่อหน่วย</button>
+                    </div>
+                </form>
+            </section>
         </div>
 
         <div id="viewMap" class="flex-col hidden grow bg-navy-800 rounded-lg overflow-hidden border-2 border-gold-500 min-h-[600px] relative">
@@ -243,6 +263,40 @@
             </button>
         </div>
     </main>
+
+    <div id="finalizeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-navy-900/60 px-4">
+        <div class="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-lg">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-navy-800">สรุปผลกิจกรรม</h3>
+                <button type="button" onclick="closeFinalizeModal()" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+            </div>
+            <form id="finalizeForm" class="p-6 space-y-4">
+                <input type="hidden" id="finalizeReportId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ผลสัมฤทธิ์สุดท้าย</label>
+                    <select id="finalStatusSelect" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500"></select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">วันที่สรุปผล</label>
+                        <input type="date" id="finalDateInput" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">เวลาสรุปผล</label>
+                        <input type="time" id="finalTimeInput" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">หมายเหตุผลการดำเนินการจริง</label>
+                    <textarea id="finalNoteInput" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="เว้นว่างได้"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeFinalizeModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-5 rounded shadow">ยกเลิก</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded shadow">บันทึกสรุปผล</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <footer class="bg-navy-900 text-white py-4 mt-auto">
         <div class="container mx-auto px-4 text-center text-sm text-gray-400">
@@ -270,6 +324,7 @@
                 { id: 'status_delay', name: 'ล่าช้ากว่ากำหนด', color: 'yellow', updatedAt: nowIso() },
                 { id: 'status_failed', name: 'ล้มเหลว/ยกเลิก', color: 'red', updatedAt: nowIso() }
             ],
+            unitLabels: units.map(unit => ({ unit, name: '', updatedAt: nowIso(), deleted: false })),
             reports: [
                 { id: 'sample_1', unit: 'N1', date: '2026-06-09', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย', createdAt: nowIso(), updatedAt: nowIso(), finalStatus: 'สำเร็จตามเป้าหมาย', finalDate: '2026-06-09', finalTime: '12:00', finalNote: '', deleted: false },
                 { id: 'sample_2', unit: 'N1', date: '2026-06-10', time: '14:30', details: 'ลาดตระเวนทางทะเลตามพิกัดเป้าหมาย', status: 'อยู่ระหว่างดำเนินการ', createdAt: nowIso(), updatedAt: nowIso(), finalStatus: '', finalDate: '', finalTime: '', finalNote: '', deleted: false },
@@ -311,6 +366,7 @@
             renderEditTabs();
             renderEditTable();
             renderStatusTable();
+            renderUnitLabelsTable();
             updateSyncUi();
             switchView('dashboard');
             window.addEventListener('online', () => syncNow());
@@ -324,7 +380,8 @@
                 'viewDashboard', 'viewEdit', 'viewSettings', 'viewMap', 'mainHeaderTitle', 'mainHeaderSubtitle', 'pageTitle', 'footerTitle',
                 'btnNavDashboard', 'btnNavEdit', 'btnNavMap', 'btnNavSettings', 'dashboardGrid', 'dashboardToggles', 'unitTabs',
                 'reportTableBody', 'formTitle', 'btnSubmitForm', 'btnCancelEdit', 'reportStatus', 'statusTableBody', 'btnSubmitStatus',
-                'btnCancelStatusEdit', 'syncBadge', 'lastSyncText', 'syncMessage', 'pendingSummary'
+                'btnCancelStatusEdit', 'unitLabelsTableBody', 'finalizeModal', 'finalizeReportId', 'finalStatusSelect', 'finalDateInput',
+                'finalTimeInput', 'finalNoteInput', 'syncBadge', 'lastSyncText', 'syncMessage', 'pendingSummary'
             ].forEach(id => el[id] = document.getElementById(id));
         }
 
@@ -350,6 +407,19 @@
                 updatedAt: s.updatedAt || nowIso(),
                 deleted: Boolean(s.deleted)
             })).filter(s => s.name) : next.activityStatuses;
+            if (Array.isArray(input.unitLabels)) {
+                const labelMap = new Map(next.unitLabels.map(item => [item.unit, item]));
+                input.unitLabels.forEach(item => {
+                    if (!units.includes(item.unit)) return;
+                    labelMap.set(item.unit, {
+                        unit: item.unit,
+                        name: item.name || '',
+                        updatedAt: item.updatedAt || nowIso(),
+                        deleted: Boolean(item.deleted)
+                    });
+                });
+                next.unitLabels = units.map(unit => labelMap.get(unit) || { unit, name: '', updatedAt: nowIso(), deleted: false });
+            }
             if (Array.isArray(input.reports)) {
                 next.reports = input.reports.map(r => ({
                     id: String(r.id || newId('report')),
@@ -448,6 +518,7 @@
         function snapshotOperations() {
             return [
                 { type: 'saveConfig', payload: state.appConfig },
+                ...units.map(unit => ({ type: 'upsertUnit', payload: getUnitLabelRecord(unit) })),
                 ...activeStatuses().map(status => ({ type: 'upsertStatus', payload: status })),
                 ...activeReports().map(report => ({ type: 'upsertReport', payload: report }))
             ];
@@ -598,6 +669,15 @@
                 }
             });
             merged.activityStatuses = [...statusMap.values()].filter(s => !s.deleted);
+            const unitMap = new Map();
+            [...remoteState.unitLabels, ...localState.unitLabels].forEach(item => {
+                if (!units.includes(item.unit)) return;
+                const existing = unitMap.get(item.unit);
+                if (!existing || new Date(item.updatedAt || 0) >= new Date(existing.updatedAt || 0)) {
+                    unitMap.set(item.unit, item);
+                }
+            });
+            merged.unitLabels = units.map(unit => unitMap.get(unit) || { unit, name: '', updatedAt: nowIso(), deleted: false });
             merged.appConfig = new Date(localState.meta.updatedAt || 0) > new Date(remoteState.meta.updatedAt || 0) ? localState.appConfig : remoteState.appConfig;
             merged.meta = { ...merged.meta, updatedAt: nowIso() };
             return merged;
@@ -611,6 +691,7 @@
             renderEditTabs();
             renderEditTable();
             renderStatusTable();
+            renderUnitLabelsTable();
             updateSyncUi();
         }
 
@@ -657,6 +738,7 @@
                 el.viewSettings.classList.add('flex');
                 el.btnNavSettings.className = activeClass;
                 renderStatusTable();
+                renderUnitLabelsTable();
             } else if (viewName === 'map') {
                 el.viewMap.classList.remove('hidden');
                 el.viewMap.classList.add('flex');
@@ -671,6 +753,54 @@
         function activeReports(unit) {
             return state.reports.filter(report => !report.deleted && (!unit || report.unit === unit));
         }
+
+        function getUnitLabelRecord(unit) {
+            let record = state.unitLabels.find(item => item.unit === unit);
+            if (!record) {
+                record = { unit, name: '', updatedAt: nowIso(), deleted: false };
+                state.unitLabels.push(record);
+            }
+            return record;
+        }
+
+        function getUnitDisplayName(unit) {
+            const name = (getUnitLabelRecord(unit).name || '').trim();
+            return name ? `${unit} - ${name}` : unit;
+        }
+
+        function renderUnitLabelsTable() {
+            el.unitLabelsTableBody.innerHTML = '';
+            units.forEach(unit => {
+                const record = getUnitLabelRecord(unit);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm font-bold text-navy-800 whitespace-nowrap">${escapeHtml(unit)}</td>
+                    <td class="px-4 py-3">
+                        <input type="text" id="unitLabel_${unit}" value="${escapeHtml(record.name || '')}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="เช่น กองกำลังส่วนหน้า">
+                    </td>
+                `;
+                el.unitLabelsTableBody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('unitLabelsForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const operations = [];
+            units.forEach(unit => {
+                const record = getUnitLabelRecord(unit);
+                record.name = document.getElementById(`unitLabel_${unit}`).value.trim();
+                record.updatedAt = nowIso();
+                record.deleted = false;
+                operations.push({ type: 'upsertUnit', payload: { ...record } });
+            });
+            saveLocalState();
+            queueOperations(operations);
+            syncNow({ quiet: true });
+            renderDashboardToggles();
+            renderDashboard();
+            renderEditTabs();
+            renderEditTable();
+        });
 
         function updateStatusDropdown() {
             el.reportStatus.innerHTML = '';
@@ -761,7 +891,7 @@
             units.forEach(unit => {
                 const label = document.createElement('label');
                 label.className = 'inline-flex items-center gap-2 cursor-pointer';
-                label.innerHTML = `<input type="checkbox" ${dashboardVisibility[unit] ? 'checked' : ''} onchange="toggleDashboardUnit('${unit}', this.checked)" class="w-4 h-4 text-navy-600 rounded focus:ring-navy-500"><span class="text-sm font-medium">${unit}</span>`;
+                label.innerHTML = `<input type="checkbox" ${dashboardVisibility[unit] ? 'checked' : ''} onchange="toggleDashboardUnit('${unit}', this.checked)" class="w-4 h-4 text-navy-600 rounded focus:ring-navy-500"><span class="text-sm font-medium">${escapeHtml(getUnitDisplayName(unit))}</span>`;
                 el.dashboardToggles.appendChild(label);
             });
         }
@@ -822,7 +952,7 @@
                 contentHtml += '</div>';
                 box.innerHTML = `
                     <div class="bg-navy-700 text-white px-4 py-3 rounded-t-lg flex justify-between items-center shrink-0">
-                        <span class="font-bold text-lg">หน่วย ${unit}</span>
+                        <span class="font-bold text-lg">หน่วย ${escapeHtml(getUnitDisplayName(unit))}</span>
                         <div class="flex items-center gap-2">
                             <button type="button" onclick="downloadQuickUnitPdf('${unit}')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-2 py-1 rounded shadow">PDF</button>
                             <span class="bg-gold-500 text-navy-900 text-xs font-bold px-2 py-1 rounded-full">${filteredReports.length} รายการ</span>
@@ -840,19 +970,19 @@
                 const btn = document.createElement('button');
                 const isActive = unit === currentUnitEdit;
                 btn.className = `px-6 py-3 text-sm font-medium transition-colors focus:outline-none ${isActive ? 'tab-active bg-navy-700 rounded-t-lg' : 'tab-inactive hover:bg-navy-700 rounded-t-lg'}`;
-                btn.textContent = `หน่วย ${unit}`;
+                btn.textContent = `หน่วย ${getUnitDisplayName(unit)}`;
                 btn.onclick = () => {
                     cancelEdit();
                     currentUnitEdit = unit;
-                    document.getElementById('formUnitLabel').textContent = unit;
-                    document.getElementById('tableUnitLabel').textContent = unit;
+                    document.getElementById('formUnitLabel').textContent = getUnitDisplayName(unit);
+                    document.getElementById('tableUnitLabel').textContent = getUnitDisplayName(unit);
                     renderEditTabs();
                     renderEditTable();
                 };
                 el.unitTabs.appendChild(btn);
             });
-            document.getElementById('formUnitLabel').textContent = currentUnitEdit;
-            document.getElementById('tableUnitLabel').textContent = currentUnitEdit;
+            document.getElementById('formUnitLabel').textContent = getUnitDisplayName(currentUnitEdit);
+            document.getElementById('tableUnitLabel').textContent = getUnitDisplayName(currentUnitEdit);
         }
 
         function resetForm() {
@@ -862,7 +992,7 @@
             document.getElementById('reportDetails').value = '';
             if (activeStatuses().length > 0) document.getElementById('reportStatus').value = activeStatuses()[0].name;
             document.getElementById('editingReportId').value = '';
-            el.formTitle.innerHTML = `บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">${currentUnitEdit}</span>`;
+            el.formTitle.innerHTML = `บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">${escapeHtml(getUnitDisplayName(currentUnitEdit))}</span>`;
             el.btnSubmitForm.textContent = 'บันทึกข้อมูล';
             el.btnSubmitForm.className = 'bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow transition-colors';
             el.btnCancelEdit.classList.add('hidden');
@@ -938,28 +1068,54 @@
         function finalizeReport(id) {
             const report = state.reports.find(item => item.id === id);
             if (!report) return;
-            const statusOptions = activeStatuses().map(item => item.name).join(', ');
-            const finalStatus = prompt(`ผลสัมฤทธิ์สุดท้ายของกิจกรรมนี้คืออะไร?\nเลือก/พิมพ์จากรายการ: ${statusOptions}`, report.finalStatus || report.status || '');
-            if (finalStatus === null) return;
             const today = new Date().toISOString().slice(0, 10);
-            const finalDate = prompt('วันที่สรุปผลสุดท้าย (YYYY-MM-DD)', report.finalDate || today);
-            if (finalDate === null) return;
             const nowTime = new Date().toTimeString().slice(0, 5);
-            const finalTime = prompt('เวลาสรุปผลสุดท้าย (HH:MM)', report.finalTime || nowTime);
-            if (finalTime === null) return;
-            const finalNote = prompt('หมายเหตุผลการดำเนินการจริง (เว้นว่างได้)', report.finalNote || '');
-            if (finalNote === null) return;
 
-            report.finalStatus = finalStatus.trim();
-            report.finalDate = finalDate.trim();
-            report.finalTime = finalTime.trim();
-            report.finalNote = finalNote.trim();
+            el.finalizeReportId.value = report.id;
+            el.finalStatusSelect.innerHTML = '';
+            activeStatuses().forEach(status => {
+                const opt = document.createElement('option');
+                opt.value = status.name;
+                opt.textContent = status.name;
+                el.finalStatusSelect.appendChild(opt);
+            });
+            ensureSelectOption(el.finalStatusSelect, report.finalStatus || report.status || '');
+            el.finalStatusSelect.value = report.finalStatus || report.status || '';
+            el.finalDateInput.value = report.finalDate || today;
+            el.finalTimeInput.value = report.finalTime || nowTime;
+            el.finalNoteInput.value = report.finalNote || '';
+            el.finalizeModal.classList.remove('hidden');
+            el.finalizeModal.classList.add('flex');
+        }
+
+        function closeFinalizeModal() {
+            el.finalizeModal.classList.add('hidden');
+            el.finalizeModal.classList.remove('flex');
+        }
+
+        function ensureSelectOption(select, value) {
+            if (!value || Array.from(select.options).some(option => option.value === value)) return;
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = value;
+            select.appendChild(opt);
+        }
+
+        document.getElementById('finalizeForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const report = state.reports.find(item => item.id === el.finalizeReportId.value);
+            if (!report) return;
+            report.finalStatus = el.finalStatusSelect.value;
+            report.finalDate = el.finalDateInput.value;
+            report.finalTime = el.finalTimeInput.value;
+            report.finalNote = el.finalNoteInput.value.trim();
             report.updatedAt = nowIso();
             saveLocalState();
             queueOperation({ type: 'upsertReport', payload: report });
             renderEditTable();
             renderDashboard();
-        }
+            closeFinalizeModal();
+        });
 
         function editReport(id) {
             const report = state.reports.find(item => item.id === id);
@@ -972,7 +1128,7 @@
             document.getElementById('reportDetails').value = report.details;
             ensureStatusOption(report.status);
             document.getElementById('reportStatus').value = report.status;
-            el.formTitle.innerHTML = `แก้ไขรายงาน: หน่วย <span id="formUnitLabel" class="text-blue-600 ml-1">${report.unit}</span>`;
+            el.formTitle.innerHTML = `แก้ไขรายงาน: หน่วย <span id="formUnitLabel" class="text-blue-600 ml-1">${escapeHtml(getUnitDisplayName(report.unit))}</span>`;
             el.btnSubmitForm.textContent = 'บันทึกการแก้ไข';
             el.btnSubmitForm.className = 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded shadow transition-colors';
             el.btnCancelEdit.classList.remove('hidden');
@@ -1050,6 +1206,7 @@
 
         function buildUnitReportHtml(unit = currentUnitEdit, filters = {}) {
             const rows = getUnitReportRows(unit, filters);
+            const unitName = getUnitDisplayName(unit);
             const generatedAt = new Date().toLocaleString('th-TH');
             const rangeText = filters.startDate || filters.endDate
                 ? ` | ช่วงวันที่: ${filters.startDate || 'เริ่มต้น'} ถึง ${filters.endDate || 'ล่าสุด'}`
@@ -1074,7 +1231,7 @@
                 <html lang="th">
                 <head>
                     <meta charset="UTF-8">
-                    <title>รายงานหน่วย ${escapeHtml(unit)}</title>
+                    <title>รายงานหน่วย ${escapeHtml(unitName)}</title>
                     <style>
                         body { font-family: "Sarabun", Arial, sans-serif; color: #111827; padding: 24px; }
                         h1 { font-size: 22px; margin: 0 0 6px; }
@@ -1088,7 +1245,7 @@
                     </style>
                 </head>
                 <body>
-                    <h1>${escapeHtml(state.appConfig.mainTitle)} - หน่วย ${escapeHtml(unit)}</h1>
+                    <h1>${escapeHtml(state.appConfig.mainTitle)} - หน่วย ${escapeHtml(unitName)}</h1>
                     <div class="meta">${escapeHtml(state.appConfig.subTitle)} | สร้างรายงาน: ${escapeHtml(generatedAt)}${escapeHtml(rangeText)}</div>
                     <table>
                         <thead>

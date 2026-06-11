@@ -2,6 +2,7 @@ var DEFAULT_SPREADSHEET_ID = '1fHx-iquw-pGeWmHsr0szKxylxIhlFpmujU5PYqvmP0w';
 var SHEETS = {
   reports: { name: 'Reports', headers: ['id', 'unit', 'date', 'time', 'details', 'status', 'createdAt', 'updatedAt', 'finalStatus', 'finalDate', 'finalTime', 'finalNote', 'deleted'] },
   statuses: { name: 'Statuses', headers: ['id', 'name', 'color', 'updatedAt', 'deleted'] },
+  units: { name: 'Units', headers: ['unit', 'name', 'updatedAt', 'deleted'] },
   config: { name: 'Config', headers: ['key', 'value', 'updatedAt'] }
 };
 
@@ -54,6 +55,8 @@ function applyOps(id, ops) {
     if (op.type === 'deleteReport') markDeleted(id, SHEETS.reports, p.id, p.updatedAt);
     if (op.type === 'upsertStatus') upsert(id, SHEETS.statuses, p.id, [p.id, p.name, p.color, p.updatedAt, !!p.deleted]);
     if (op.type === 'deleteStatus') markDeleted(id, SHEETS.statuses, p.id, p.updatedAt);
+    if (op.type === 'upsertUnit') upsert(id, SHEETS.units, p.unit, [p.unit, p.name || '', p.updatedAt || new Date().toISOString(), !!p.deleted]);
+    if (op.type === 'deleteUnit') markDeleted(id, SHEETS.units, p.unit, p.updatedAt);
     if (op.type === 'saveConfig') {
       var t = new Date().toISOString();
       upsert(id, SHEETS.config, 'mainTitle', ['mainTitle', p.mainTitle || '', t]);
@@ -98,8 +101,11 @@ function loadState(id) {
   var statuses = rows(ss.getSheetByName('Statuses'), SHEETS.statuses.headers).map(function(r) {
     return { id: str(r.id), name: str(r.name), color: str(r.color) || 'gray', updatedAt: iso(r.updatedAt), deleted: bool(r.deleted) };
   }).filter(function(r) { return r.id && r.name; });
+  var unitLabels = rows(ss.getSheetByName('Units'), SHEETS.units.headers).map(function(r) {
+    return { unit: str(r.unit), name: str(r.name), updatedAt: iso(r.updatedAt), deleted: bool(r.deleted) };
+  }).filter(function(r) { return r.unit; });
   var cfg = rows(ss.getSheetByName('Config'), SHEETS.config.headers);
-  return { appConfig: { mainTitle: cfgVal(cfg, 'mainTitle') || 'ระบบรายงานสถานการณ์ Wargame', subTitle: cfgVal(cfg, 'subTitle') || 'โรงเรียนเสนาธิการทหารเรือ' }, activityStatuses: statuses, reports: reports, meta: { updatedAt: new Date().toISOString(), lastSyncAt: new Date().toISOString() } };
+  return { appConfig: { mainTitle: cfgVal(cfg, 'mainTitle') || 'ระบบรายงานสถานการณ์ Wargame', subTitle: cfgVal(cfg, 'subTitle') || 'โรงเรียนเสนาธิการทหารเรือ' }, activityStatuses: statuses, unitLabels: unitLabels, reports: reports, meta: { updatedAt: new Date().toISOString(), lastSyncAt: new Date().toISOString() } };
 }
 
 function rows(sh, headers) {
