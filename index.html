@@ -152,7 +152,6 @@
                         <p id="syncMessage" class="text-sm text-gray-500 mt-1">ใส่ Apps Script Web App URL ในช่องตั้งค่าเพื่ออ่าน/เขียนข้อมูลไปยัง Google Sheets</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="loadFromSheets()" class="bg-navy-700 hover:bg-navy-800 text-white font-bold px-4 py-2 rounded">โหลดจาก Sheets</button>
                         <button onclick="syncNow()" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold px-4 py-2 rounded">ซิงก์ตอนนี้</button>
                         <button onclick="downloadBackup()" class="bg-gray-100 hover:bg-gray-200 text-navy-800 font-bold px-4 py-2 rounded border border-gray-300">สำรองไฟล์ JSON</button>
                     </div>
@@ -183,7 +182,6 @@
                     </div>
                     <div class="flex flex-wrap justify-end gap-2">
                         <button type="button" onclick="saveApiSettings()" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow">บันทึกการเชื่อมต่อ</button>
-                        <button type="button" onclick="loadFromSheets()" class="bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-6 rounded shadow">ทดสอบโหลดข้อมูล</button>
                     </div>
                     <div class="bg-navy-50 border border-navy-100 rounded p-4 text-sm text-navy-800">
                         ใช้ไฟล์ <strong>google_apps_script.gs</strong> ในโฟลเดอร์นี้ไปวางใน Apps Script ของ Google Sheets แล้ว Deploy เป็น Web App จากนั้นนำ URL มาใส่ที่นี่
@@ -375,7 +373,7 @@
         const SETTINGS_KEY = 'wargame_settings_v3';
         const SPREADSHEET_ID = '1fHx-iquw-pGeWmHsr0szKxylxIhlFpmujU5PYqvmP0w';
         const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzMTDlYdpqXduJNrPCtH_KCI0NLuVSrmOwjKuQTUMgkD-ceN_EjplhgtCfg5dGj2dcOUg/exec';
-        const APP_VERSION = '3.4';
+        const APP_VERSION = '3.5';
         const CONNECTION_CONFIRM_CODE = 'ncsc86';
         const units = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7'];
 
@@ -394,11 +392,7 @@
                 { id: 'status_failed', name: 'ล้มเหลว/ยกเลิก', color: 'red', updatedAt: nowIso() }
             ],
             unitLabels: units.map(unit => ({ unit, name: '', updatedAt: nowIso(), deleted: false })),
-            reports: [
-                { id: 'sample_1', unit: 'N1', date: '2026-06-09', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย', createdAt: nowIso(), updatedAt: nowIso(), finalStatus: 'สำเร็จตามเป้าหมาย', finalDate: '2026-06-09', finalTime: '12:00', finalNote: '', deleted: false },
-                { id: 'sample_2', unit: 'N1', date: '2026-06-10', time: '14:30', details: 'ลาดตระเวนทางทะเลตามพิกัดเป้าหมาย', status: 'อยู่ระหว่างดำเนินการ', createdAt: nowIso(), updatedAt: nowIso(), finalStatus: '', finalDate: '', finalTime: '', finalNote: '', deleted: false },
-                { id: 'sample_3', unit: 'N2', date: '2026-06-10', time: '09:00', details: 'เตรียมพร้อมเรือรบและอากาศยาน', status: 'สำเร็จตามเป้าหมาย', createdAt: nowIso(), updatedAt: nowIso(), finalStatus: '', finalDate: '', finalTime: '', finalNote: '', deleted: false }
-            ],
+            reports: [],
             meta: { updatedAt: nowIso(), lastSyncAt: '' }
         };
 
@@ -408,6 +402,7 @@
         let currentView = 'dashboard';
         let dashboardVisibility = { N1:true, N2:true, N3:true, N4:true, N5:true, N6:true, N7:true };
         let syncInFlight = false;
+        const pendingOperations = [];
 
         const el = {};
 
@@ -492,7 +487,7 @@
             clearSiteCookiesAndCaches();
             if (forceFreshVersionUrl()) return;
             bindDom();
-            loadLocalState();
+            clearLocalDatabaseCache();
             loadSettings();
             document.getElementById('currentDate').textContent = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
             document.getElementById('settingSheetId').value = SPREADSHEET_ID;
@@ -527,15 +522,11 @@
             ].forEach(id => el[id] = document.getElementById(id));
         }
 
-        function loadLocalState() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (!saved) return;
-            try {
-                state = normalizeState(JSON.parse(saved));
-            } catch (error) {
-                console.error(error);
-                setSyncMessage('ไฟล์ข้อมูลสำรองในเครื่องอ่านไม่ได้ ระบบจึงใช้ข้อมูลตั้งต้น', 'error');
-            }
+
+        function clearLocalDatabaseCache() {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(QUEUE_KEY);
+            pendingOperations.length = 0;
         }
 
         function normalizeState(input) {
@@ -605,7 +596,6 @@
 
         function saveLocalState() {
             state.meta.updatedAt = nowIso();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             updateSyncUi();
         }
 
@@ -635,15 +625,12 @@
         }
 
         function getPendingQueue() {
-            try {
-                return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
-            } catch (error) {
-                return [];
-            }
+            return [...pendingOperations];
         }
 
         function setPendingQueue(queue) {
-            localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+            pendingOperations.length = 0;
+            queue.forEach(item => pendingOperations.push(item));
             updateSyncUi();
         }
 
@@ -735,6 +722,7 @@
                 url.searchParams.set('action', 'load');
                 url.searchParams.set('spreadsheetId', SPREADSHEET_ID);
                 url.searchParams.set('callback', callbackName);
+                url.searchParams.set('_', Date.now().toString());
                 script.onerror = () => {
                     cleanup();
                     reject(new Error('โหลด Apps Script ไม่สำเร็จ กรุณาตรวจสิทธิ์ Deploy เป็น Anyone'));
