@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">ระบบรายงานสถานการณ์ Wargame</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -16,7 +15,7 @@
                     }
                 }
             }
-        }
+        };
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -31,56 +30,42 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-navy-900">
-
-    <!-- Header -->
     <header class="bg-navy-800 text-white shadow-lg shrink-0">
-        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-4">
-                <svg class="w-8 h-8 text-gold-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+        <div class="container mx-auto px-4 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <svg class="w-8 h-8 text-gold-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
                 <div>
                     <h1 id="mainHeaderTitle" class="text-2xl font-bold tracking-wide">ระบบรายงานสถานการณ์ Wargame</h1>
-                    <p class="text-sm text-gold-400"><span id="mainHeaderSubtitle">โรงเรียนเสนาธิการทหารเรือ</span> <span class="ml-2 px-2 py-0.5 bg-navy-700 rounded text-xs text-white">เวอร์ชัน 2.3</span></p>
+                    <p class="text-sm text-gold-400">
+                        <span id="mainHeaderSubtitle">โรงเรียนเสนาธิการทหารเรือ</span>
+                        <span class="ml-2 px-2 py-0.5 bg-navy-700 rounded text-xs text-white">เวอร์ชัน 3.0</span>
+                    </p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2 justify-center">
-                <span class="text-sm mr-4 hidden lg:inline">วันที่: <span id="currentDate"></span></span>
-                <!-- View Switch Buttons -->
-                <button onclick="switchView('dashboard')" id="btnNavDashboard" class="bg-gold-500 hover:bg-gold-600 text-navy-900 px-4 py-2 rounded font-bold transition-colors">
-                    หน้าหลัก (Dashboard)
-                </button>
-                <button onclick="switchView('edit')" id="btnNavEdit" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">
-                    จัดการข้อมูลรายงาน
-                </button>
-                <button onclick="switchView('settings')" id="btnNavSettings" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">
-                    ข้อมูลพื้นฐาน
-                </button>
-                <button onclick="switchView('map')" id="btnNavMap" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">
-                    แผนที่ปฏิบัติการ
-                </button>
+                <span class="text-sm mr-2 hidden xl:inline">วันที่: <span id="currentDate"></span></span>
+                <button onclick="switchView('dashboard')" id="btnNavDashboard" class="bg-gold-500 hover:bg-gold-600 text-navy-900 px-4 py-2 rounded font-bold transition-colors">หน้าหลัก</button>
+                <button onclick="switchView('edit')" id="btnNavEdit" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">จัดการรายงาน</button>
+                <button onclick="switchView('settings')" id="btnNavSettings" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">ข้อมูลพื้นฐาน</button>
+                <button onclick="switchView('map')" id="btnNavMap" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">แผนที่</button>
             </div>
         </div>
     </header>
 
     <main class="flex-grow container mx-auto px-4 py-6 flex flex-col h-full">
-
-        <!-- ================= DASHBOARD VIEW ================= -->
         <div id="viewDashboard" class="flex flex-col flex-grow hidden">
-            <!-- Controls: Checkboxes and Date Filter -->
             <div class="bg-white p-4 rounded-lg shadow mb-4 border-l-4 border-gold-500 shrink-0">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <!-- Units Toggles -->
-                    <div class="flex items-center gap-4">
+                <div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center gap-4">
                         <span class="font-bold text-navy-800">เลือกหน่วยที่ต้องการแสดง:</span>
                         <div id="dashboardToggles" class="flex flex-wrap gap-4"></div>
                         <button onclick="checkAllToggles(true)" class="text-sm text-blue-600 hover:underline">เลือกทั้งหมด</button>
                         <button onclick="checkAllToggles(false)" class="text-sm text-red-600 hover:underline">เอาออกทั้งหมด</button>
                     </div>
-                    
-                    <!-- Date Range Filter -->
-                    <div class="flex flex-wrap items-center space-x-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
-                        <label class="text-sm font-bold text-navy-800">แสดงข้อมูลห้วงวันที่:</label>
+                    <div class="flex flex-wrap items-center gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
+                        <label class="text-sm font-bold text-navy-800">ช่วงวันที่:</label>
                         <input type="date" id="dashboardStartDate" onchange="renderDashboard()" class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-navy-500">
                         <span class="text-sm text-gray-500">ถึง</span>
                         <input type="date" id="dashboardEndDate" onchange="renderDashboard()" class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-navy-500">
@@ -88,25 +73,16 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Dashboard Grid Container -->
             <div id="dashboardGrid" class="flex flex-row overflow-x-auto gap-4 pb-4 items-stretch grow h-0 min-h-[500px]"></div>
         </div>
 
-        <!-- ================= EDIT / ENTRY VIEW ================= -->
         <div id="viewEdit" class="flex-col hidden">
-            <!-- Unit Tabs -->
             <div class="bg-navy-800 rounded-t-lg px-4 pt-2 mb-6">
-                <div class="flex space-x-2 overflow-x-auto" id="unitTabs"></div>
+                <div class="flex gap-2 overflow-x-auto" id="unitTabs"></div>
             </div>
 
-            <!-- Form Section -->
-            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-gold-500 relative">
-                <h2 class="text-xl font-bold mb-4 flex items-center text-navy-800" id="formTitle">
-                    <svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                    บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">N1</span>
-                </h2>
-                
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-gold-500">
+                <h2 class="text-xl font-bold mb-4 flex items-center text-navy-800" id="formTitle">บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">N1</span></h2>
                 <form id="reportForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <input type="hidden" id="editingReportId" value="">
                     <div>
@@ -119,29 +95,26 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ผลสัมฤทธิ์ของกิจกรรม</label>
-                        <select id="reportStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
-                            <!-- Options populated by JS -->
-                        </select>
+                        <select id="reportStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500"></select>
                     </div>
                     <div class="md:col-span-3">
                         <label class="block text-sm font-medium text-gray-700 mb-1">สถานการณ์ปฏิบัติการ</label>
                         <textarea id="reportDetails" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="อธิบายรายละเอียดการปฏิบัติการ..."></textarea>
                     </div>
-                    <div class="md:col-span-3 flex justify-end space-x-3">
-                        <button type="button" id="btnCancelEdit" onclick="cancelEdit()" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded shadow transition-colors">
-                            ยกเลิกการแก้ไข
-                        </button>
-                        <button type="submit" id="btnSubmitForm" class="bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow transition-colors">
-                            บันทึกข้อมูล
-                        </button>
+                    <div class="md:col-span-3 flex justify-end gap-3">
+                        <button type="button" id="btnCancelEdit" onclick="cancelEdit()" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded shadow transition-colors">ยกเลิก</button>
+                        <button type="submit" id="btnSubmitForm" class="bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow transition-colors">บันทึกข้อมูล</button>
                     </div>
                 </form>
             </section>
 
-            <!-- Table Section -->
             <section class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
-                <div class="bg-navy-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div class="bg-navy-50 px-6 py-4 border-b border-gray-200 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
                     <h2 class="text-lg font-bold text-navy-800">รายการปฏิบัติการทั้งหมด: หน่วย <span id="tableUnitLabel" class="text-gold-600">N1</span></h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="downloadUnitExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded shadow text-sm">โหลด Excel</button>
+                        <button type="button" onclick="downloadUnitPdf()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded shadow text-sm">โหลด PDF</button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -159,268 +132,559 @@
             </section>
         </div>
 
-        <!-- ================= SETTINGS / MASTER DATA VIEW ================= -->
         <div id="viewSettings" class="flex-col hidden">
-            
-            <h2 class="text-2xl font-bold text-navy-800 mb-6 border-b-2 border-gold-500 inline-block pb-2">ข้อมูลพื้นฐานของระบบ (Master Data)</h2>
+            <h2 class="text-2xl font-bold text-navy-800 mb-6 border-b-2 border-gold-500 inline-block pb-2">ข้อมูลพื้นฐานของระบบ</h2>
 
-            <!-- App Titles Settings -->
-            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200 max-w-2xl">
-                <h3 class="text-xl font-bold mb-4 flex items-center text-navy-800">
-                    <svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    ตั้งค่าชื่อระบบ (Header Text)
-                </h3>
+            <section id="syncPanel" class="bg-white border-l-4 border-gold-500 rounded-lg shadow p-4 mb-8 max-w-3xl">
+                <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span id="syncBadge" class="px-2 py-1 rounded text-xs font-bold bg-gray-100 text-gray-700">ยังไม่เชื่อมต่อ Google Sheets</span>
+                            <span id="lastSyncText" class="text-sm text-gray-600">ข้อมูลถูกเก็บสำรองในเครื่องนี้</span>
+                        </div>
+                        <p id="syncMessage" class="text-sm text-gray-500 mt-1">ใส่ Apps Script Web App URL ในช่องตั้งค่าเพื่ออ่าน/เขียนข้อมูลไปยัง Google Sheets</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="loadFromSheets()" class="bg-navy-700 hover:bg-navy-800 text-white font-bold px-4 py-2 rounded">โหลดจาก Sheets</button>
+                        <button onclick="syncNow()" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold px-4 py-2 rounded">ซิงก์ตอนนี้</button>
+                        <button onclick="downloadBackup()" class="bg-gray-100 hover:bg-gray-200 text-navy-800 font-bold px-4 py-2 rounded border border-gray-300">สำรองไฟล์ JSON</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200 max-w-3xl">
+                <h3 class="text-xl font-bold mb-4 text-navy-800">การเชื่อมต่อ Google Sheets</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Google Apps Script Web App URL</label>
+                        <input type="url" id="settingApiUrl" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="https://script.google.com/macros/s/.../exec">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Spreadsheet ID</label>
+                            <input type="text" id="settingSheetId" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">สถานะข้อมูลค้างส่ง</label>
+                            <input type="text" id="pendingSummary" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" readonly>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap justify-end gap-2">
+                        <button type="button" onclick="saveApiSettings()" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow">บันทึกการเชื่อมต่อ</button>
+                        <button type="button" onclick="loadFromSheets()" class="bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-6 rounded shadow">ทดสอบโหลดข้อมูล</button>
+                    </div>
+                    <div class="bg-navy-50 border border-navy-100 rounded p-4 text-sm text-navy-800">
+                        ใช้ไฟล์ <strong>google_apps_script.gs</strong> ในโฟลเดอร์นี้ไปวางใน Apps Script ของ Google Sheets แล้ว Deploy เป็น Web App จากนั้นนำ URL มาใส่ที่นี่
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200 max-w-3xl">
+                <h3 class="text-xl font-bold mb-4 text-navy-800">ตั้งค่าชื่อระบบ</h3>
                 <form id="appSettingsForm" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อหัวข้อหลัก (Main Title)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อหัวข้อหลัก</label>
                         <input type="text" id="settingMainTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อหัวข้อรอง (Subtitle)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อหัวข้อรอง</label>
                         <input type="text" id="settingSubTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
                     </div>
                     <div class="flex justify-end">
-                        <button type="submit" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow transition-colors">
-                            บันทึกการเปลี่ยนแปลง
-                        </button>
+                        <button type="submit" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow">บันทึกการเปลี่ยนแปลง</button>
                     </div>
                 </form>
             </section>
 
-            <!-- Status Settings -->
-            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200 max-w-2xl">
-                <h3 class="text-xl font-bold mb-4 flex items-center text-navy-800">
-                    <svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                    รายการ "ผลสัมฤทธิ์ของกิจกรรม"
-                </h3>
-                
-                <p class="text-sm text-gray-600 mb-4">คุณสามารถเพิ่ม หรือแก้ไขรายการสถานะของกิจกรรมที่ใช้ในตอนกรอกข้อมูลได้ที่นี่</p>
-                
-                <!-- Add New Status Form -->
-                <form id="statusForm" class="flex items-end gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200 max-w-3xl">
+                <h3 class="text-xl font-bold mb-4 text-navy-800">รายการผลสัมฤทธิ์ของกิจกรรม</h3>
+                <form id="statusForm" class="grid grid-cols-1 md:grid-cols-[1fr_180px_auto_auto] items-end gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <input type="hidden" id="editingStatusIndex" value="">
-                    <div class="flex-grow">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผลสัมฤทธิ์ (สถานะ)</label>
-                        <input type="text" id="statusNameInput" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="เช่น เลื่อนกำหนดการ...">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผลสัมฤทธิ์</label>
+                        <input type="text" id="statusNameInput" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="เช่น สำเร็จตามเป้าหมาย">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">สีแถบแสดงผล</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">สีแสดงผล</label>
                         <select id="statusColorInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
-                            <option value="green">สีเขียว (สำเร็จ/ดี)</option>
-                            <option value="blue">สีฟ้า (กำลังดำเนินการ)</option>
-                            <option value="indigo">สีน้ำเงิน (อื่นๆ)</option>
-                            <option value="yellow">สีเหลือง (ล่าช้า/ระวัง)</option>
-                            <option value="red">สีแดง (ล้มเหลว/ยกเลิก)</option>
-                            <option value="gray">สีเทา (ทั่วไป)</option>
+                            <option value="green">เขียว</option>
+                            <option value="blue">ฟ้า</option>
+                            <option value="indigo">น้ำเงิน</option>
+                            <option value="yellow">เหลือง</option>
+                            <option value="red">แดง</option>
+                            <option value="gray">เทา</option>
                         </select>
                     </div>
-                    <button type="button" id="btnCancelStatusEdit" onclick="cancelStatusEdit()" class="hidden bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded shadow transition-colors">
-                        ยกเลิก
-                    </button>
-                    <button type="submit" id="btnSubmitStatus" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow transition-colors">
-                        เพิ่มรายการ
-                    </button>
+                    <button type="button" id="btnCancelStatusEdit" onclick="cancelStatusEdit()" class="hidden bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded shadow">ยกเลิก</button>
+                    <button type="submit" id="btnSubmitStatus" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow">เพิ่ม</button>
                 </form>
-
-                <!-- List of Statuses -->
-                <div class="overflow-hidden border border-gray-200 rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-navy-50">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อสถานะ</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ตัวอย่างการแสดงผล</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">จัดการ</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อ</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ตัวอย่าง</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="statusTableBody" class="bg-white divide-y divide-gray-200"></tbody>
                     </table>
                 </div>
             </section>
-
         </div>
 
-        <!-- ================= MAP VIEW ================= -->
         <div id="viewMap" class="flex-col hidden grow bg-navy-800 rounded-lg overflow-hidden border-2 border-gold-500 min-h-[600px] relative">
             <iframe id="mapIframe" src="custom_map.html?map=001pubgmap.png" allow="autoplay; fullscreen" class="absolute inset-0 w-full h-full border-0"></iframe>
-            <!-- Fullscreen Button -->
-            <button onclick="toggleFullscreen()" class="absolute top-4 right-4 z-[1000] bg-navy-900/80 hover:bg-gold-500 text-white hover:text-navy-900 border border-gold-500 p-2 rounded shadow-lg transition-colors flex items-center justify-center" title="เต็มจอ">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onclick="toggleFullscreen()" class="absolute top-4 right-4 z-[1000] bg-navy-900/80 hover:bg-gold-500 text-white hover:text-navy-900 border border-gold-500 p-2 rounded shadow-lg transition-colors" title="เต็มจอ">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
                 </svg>
             </button>
         </div>
-
     </main>
 
     <footer class="bg-navy-900 text-white py-4 mt-auto">
         <div class="container mx-auto px-4 text-center text-sm text-gray-400">
-            &copy; 2026 <span id="footerTitle">ระบบรายงานสถานการณ์ Wargame</span>. All rights reserved. | <span class="text-gold-500">เวอร์ชัน 2.3 (รวมระบบแผนที่และตั้งค่าหัวเว็บ)</span>
+            &copy; 2026 <span id="footerTitle">ระบบรายงานสถานการณ์ Wargame</span>. <span class="text-gold-500">เชื่อมต่อ Google Sheets พร้อมระบบสำรองข้อมูลในเครื่อง</span>
         </div>
     </footer>
 
     <script>
-        // --- Data Model ---
-        let appConfig = {
-            mainTitle: 'ระบบรายงานสถานการณ์ Wargame',
-            subTitle: 'โรงเรียนเสนาธิการทหารเรือ'
-        };
-
+        const STORAGE_KEY = 'wargame_state_v3';
+        const QUEUE_KEY = 'wargame_sync_queue_v3';
+        const SETTINGS_KEY = 'wargame_settings_v3';
+        const SPREADSHEET_ID = '1fHx-iquw-pGeWmHsr0szKxylxIhlFpmujU5PYqvmP0w';
+        const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzMTDlYdpqXduJNrPCtH_KCI0NLuVSrmOwjKuQTUMgkD-ceN_EjplhgtCfg5dGj2dcOUg/exec';
         const units = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7'];
-        let currentUnitEdit = 'N1';
-        let currentView = 'dashboard'; 
-        let dashboardVisibility = { N1:true, N2:true, N3:true, N4:true, N5:true, N6:true, N7:true };
-        
-        // Master Data: Activity Statuses
-        let activityStatuses = [
-            { name: 'สำเร็จตามเป้าหมาย', color: 'green' },
-            { name: 'สำเร็จบางส่วน', color: 'indigo' },
-            { name: 'อยู่ระหว่างดำเนินการ', color: 'blue' },
-            { name: 'ล่าช้ากว่ากำหนด', color: 'yellow' },
-            { name: 'ล้มเหลว/ยกเลิก', color: 'red' }
-        ];
 
-        let reports = {
-            'N1': [
-                { id: 1, date: '2026-06-09', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย' },
-                { id: 2, date: '2026-06-10', time: '14:30', details: 'ลาดตระเวนทางทะเลตามพิกัดเป้าหมาย', status: 'อยู่ระหว่างดำเนินการ' }
+        const defaultState = {
+            appConfig: {
+                mainTitle: 'ระบบรายงานสถานการณ์ Wargame',
+                subTitle: 'โรงเรียนเสนาธิการทหารเรือ'
+            },
+            activityStatuses: [
+                { id: 'status_success', name: 'สำเร็จตามเป้าหมาย', color: 'green', updatedAt: nowIso() },
+                { id: 'status_partial', name: 'สำเร็จบางส่วน', color: 'indigo', updatedAt: nowIso() },
+                { id: 'status_progress', name: 'อยู่ระหว่างดำเนินการ', color: 'blue', updatedAt: nowIso() },
+                { id: 'status_delay', name: 'ล่าช้ากว่ากำหนด', color: 'yellow', updatedAt: nowIso() },
+                { id: 'status_failed', name: 'ล้มเหลว/ยกเลิก', color: 'red', updatedAt: nowIso() }
             ],
-            'N2': [
-                { id: 3, date: '2026-06-10', time: '09:00', details: 'เตรียมพร้อมเรือรบและอากาศยาน', status: 'สำเร็จตามเป้าหมาย' }
+            reports: [
+                { id: 'sample_1', unit: 'N1', date: '2026-06-09', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย', updatedAt: nowIso(), deleted: false },
+                { id: 'sample_2', unit: 'N1', date: '2026-06-10', time: '14:30', details: 'ลาดตระเวนทางทะเลตามพิกัดเป้าหมาย', status: 'อยู่ระหว่างดำเนินการ', updatedAt: nowIso(), deleted: false },
+                { id: 'sample_3', unit: 'N2', date: '2026-06-10', time: '09:00', details: 'เตรียมพร้อมเรือรบและอากาศยาน', status: 'สำเร็จตามเป้าหมาย', updatedAt: nowIso(), deleted: false }
             ],
-            'N3': [], 'N4': [], 'N5': [], 'N6': [], 'N7': []
+            meta: { updatedAt: nowIso(), lastSyncAt: '' }
         };
 
-        // --- DOM Elements ---
-        const viewDashboard = document.getElementById('viewDashboard');
-        const viewEdit = document.getElementById('viewEdit');
-        const viewSettings = document.getElementById('viewSettings');
-        const viewMap = document.getElementById('viewMap');
-        const mainHeaderTitle = document.getElementById('mainHeaderTitle');
-        const mainHeaderSubtitle = document.getElementById('mainHeaderSubtitle');
-        const pageTitle = document.getElementById('pageTitle');
-        const footerTitle = document.getElementById('footerTitle');
-        const btnNavDashboard = document.getElementById('btnNavDashboard');
-        const btnNavEdit = document.getElementById('btnNavEdit');
-        const btnNavMap = document.getElementById('btnNavMap');
-        const btnNavSettings = document.getElementById('btnNavSettings');
-        
-        const dashboardGrid = document.getElementById('dashboardGrid');
-        const dashboardToggles = document.getElementById('dashboardToggles');
-        const unitTabsContainer = document.getElementById('unitTabs');
-        const reportTableBody = document.getElementById('reportTableBody');
-        const formTitle = document.getElementById('formTitle');
-        const btnSubmitForm = document.getElementById('btnSubmitForm');
-        const btnCancelEdit = document.getElementById('btnCancelEdit');
-        const reportStatusSelect = document.getElementById('reportStatus');
-        
-        const statusTableBody = document.getElementById('statusTableBody');
-        const btnSubmitStatus = document.getElementById('btnSubmitStatus');
-        const btnCancelStatusEdit = document.getElementById('btnCancelStatusEdit');
+        let state = structuredClone(defaultState);
+        let settings = { apiUrl: DEFAULT_API_URL, spreadsheetId: SPREADSHEET_ID };
+        let currentUnitEdit = 'N1';
+        let currentView = 'dashboard';
+        let dashboardVisibility = { N1:true, N2:true, N3:true, N4:true, N5:true, N6:true, N7:true };
+        let syncInFlight = false;
 
-        // --- Init ---
+        const el = {};
+
+        function nowIso() {
+            return new Date().toISOString();
+        }
+
+        function newId(prefix) {
+            return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        }
+
         function init() {
-            const now = new Date();
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-            
+            bindDom();
+            loadLocalState();
+            loadSettings();
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('settingSheetId').value = SPREADSHEET_ID;
+            document.getElementById('settingApiUrl').value = settings.apiUrl || '';
             updateAppTitlesUI();
-            document.getElementById('settingMainTitle').value = appConfig.mainTitle;
-            document.getElementById('settingSubTitle').value = appConfig.subTitle;
-
             updateStatusDropdown();
             resetForm();
             resetStatusForm();
-
             renderDashboardToggles();
             renderDashboard();
             renderEditTabs();
             renderEditTable();
             renderStatusTable();
+            updateSyncUi();
             switchView('dashboard');
-        }
-
-        function updateAppTitlesUI() {
-            mainHeaderTitle.textContent = appConfig.mainTitle;
-            mainHeaderSubtitle.textContent = appConfig.subTitle;
-            pageTitle.textContent = appConfig.mainTitle;
-            footerTitle.textContent = appConfig.mainTitle;
-        }
-
-        document.getElementById('appSettingsForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            appConfig.mainTitle = document.getElementById('settingMainTitle').value.trim();
-            appConfig.subTitle = document.getElementById('settingSubTitle').value.trim();
-            updateAppTitlesUI();
-            alert('บันทึกข้อมูลระบบเรียบร้อยแล้ว');
-        });
-
-        // --- View Switching ---
-        function switchView(viewName) {
-            currentView = viewName;
-            
-            // Hide all
-            viewDashboard.classList.add('hidden'); viewDashboard.classList.remove('flex');
-            viewEdit.classList.add('hidden'); viewEdit.classList.remove('flex');
-            viewSettings.classList.add('hidden'); viewSettings.classList.remove('flex');
-            viewMap.classList.add('hidden'); viewMap.classList.remove('flex');
-            
-            // Reset buttons
-            btnNavDashboard.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
-            btnNavEdit.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
-            btnNavSettings.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
-            btnNavMap.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
-            
-            // Show selected
-            if (viewName === 'dashboard') {
-                viewDashboard.classList.remove('hidden'); viewDashboard.classList.add('flex');
-                btnNavDashboard.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
-                renderDashboard();
-            } else if (viewName === 'edit') {
-                viewEdit.classList.remove('hidden'); viewEdit.classList.add('flex');
-                btnNavEdit.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
-                updateStatusDropdown();
-                renderEditTable();
-            } else if (viewName === 'settings') {
-                viewSettings.classList.remove('hidden'); viewSettings.classList.add('flex');
-                btnNavSettings.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
-                renderStatusTable();
-            } else if (viewName === 'map') {
-                viewMap.classList.remove('hidden'); viewMap.classList.add('flex');
-                btnNavMap.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
+            window.addEventListener('online', () => syncNow());
+            if (settings.apiUrl) {
+                syncNow({ quiet: true });
             }
         }
 
-        // --- Settings (Master Data) Logic ---
+        function bindDom() {
+            [
+                'viewDashboard', 'viewEdit', 'viewSettings', 'viewMap', 'mainHeaderTitle', 'mainHeaderSubtitle', 'pageTitle', 'footerTitle',
+                'btnNavDashboard', 'btnNavEdit', 'btnNavMap', 'btnNavSettings', 'dashboardGrid', 'dashboardToggles', 'unitTabs',
+                'reportTableBody', 'formTitle', 'btnSubmitForm', 'btnCancelEdit', 'reportStatus', 'statusTableBody', 'btnSubmitStatus',
+                'btnCancelStatusEdit', 'syncBadge', 'lastSyncText', 'syncMessage', 'pendingSummary'
+            ].forEach(id => el[id] = document.getElementById(id));
+        }
+
+        function loadLocalState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return;
+            try {
+                state = normalizeState(JSON.parse(saved));
+            } catch (error) {
+                console.error(error);
+                setSyncMessage('ไฟล์ข้อมูลสำรองในเครื่องอ่านไม่ได้ ระบบจึงใช้ข้อมูลตั้งต้น', 'error');
+            }
+        }
+
+        function normalizeState(input) {
+            const next = structuredClone(defaultState);
+            if (!input || typeof input !== 'object') return next;
+            next.appConfig = { ...next.appConfig, ...(input.appConfig || {}) };
+            next.activityStatuses = Array.isArray(input.activityStatuses) ? input.activityStatuses.map((s, index) => ({
+                id: s.id || `status_${index}_${slug(s.name || 'item')}`,
+                name: s.name || '',
+                color: s.color || 'gray',
+                updatedAt: s.updatedAt || nowIso(),
+                deleted: Boolean(s.deleted)
+            })).filter(s => s.name) : next.activityStatuses;
+            if (Array.isArray(input.reports)) {
+                next.reports = input.reports.map(r => ({
+                    id: String(r.id || newId('report')),
+                    unit: units.includes(r.unit) ? r.unit : 'N1',
+                    date: r.date || '',
+                    time: r.time || '',
+                    details: r.details || '',
+                    status: r.status || '',
+                    updatedAt: r.updatedAt || nowIso(),
+                    deleted: Boolean(r.deleted)
+                }));
+            } else if (input.reports && typeof input.reports === 'object') {
+                next.reports = Object.entries(input.reports).flatMap(([unit, rows]) => (rows || []).map(r => ({
+                    id: String(r.id || newId('report')),
+                    unit: units.includes(unit) ? unit : 'N1',
+                    date: r.date || '',
+                    time: r.time || '',
+                    details: r.details || '',
+                    status: r.status || '',
+                    updatedAt: r.updatedAt || nowIso(),
+                    deleted: Boolean(r.deleted)
+                })));
+            }
+            next.meta = { ...next.meta, ...(input.meta || {}) };
+            return next;
+        }
+
+        function slug(text) {
+            return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'item';
+        }
+
+        function saveLocalState() {
+            state.meta.updatedAt = nowIso();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            updateSyncUi();
+        }
+
+        function loadSettings() {
+            try {
+                settings = { ...settings, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')) };
+            } catch (error) {
+                settings = { apiUrl: DEFAULT_API_URL, spreadsheetId: SPREADSHEET_ID };
+            }
+            if (!settings.apiUrl) settings.apiUrl = DEFAULT_API_URL;
+            settings.spreadsheetId = SPREADSHEET_ID;
+        }
+
+        function saveApiSettings() {
+            settings.apiUrl = document.getElementById('settingApiUrl').value.trim();
+            settings.spreadsheetId = SPREADSHEET_ID;
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+            updateSyncUi();
+            if (settings.apiUrl && getPendingQueue().length === 0) {
+                queueOperations(snapshotOperations());
+            }
+            if (settings.apiUrl) syncNow();
+        }
+
+        function getPendingQueue() {
+            try {
+                return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function setPendingQueue(queue) {
+            localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+            updateSyncUi();
+        }
+
+        function queueOperation(operation) {
+            const queue = getPendingQueue();
+            queue.push({ id: newId('op'), createdAt: nowIso(), ...operation });
+            setPendingQueue(queue);
+            syncNow({ quiet: true });
+        }
+
+        function queueOperations(operations) {
+            if (!operations.length) return;
+            const queue = getPendingQueue();
+            operations.forEach(operation => queue.push({ id: newId('op'), createdAt: nowIso(), ...operation }));
+            setPendingQueue(queue);
+        }
+
+        function snapshotOperations() {
+            return [
+                { type: 'saveConfig', payload: state.appConfig },
+                ...activeStatuses().map(status => ({ type: 'upsertStatus', payload: status })),
+                ...activeReports().map(report => ({ type: 'upsertReport', payload: report }))
+            ];
+        }
+
+        function setSyncMessage(message, type = 'info') {
+            el.syncMessage.textContent = message;
+            el.syncMessage.className = `text-sm mt-1 ${type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-700' : 'text-gray-500'}`;
+        }
+
+        function updateSyncUi() {
+            const pending = getPendingQueue().length;
+            const connected = Boolean(settings.apiUrl);
+            el.pendingSummary.value = `${pending} รายการ`;
+            if (!connected) {
+                el.syncBadge.textContent = 'ยังไม่เชื่อมต่อ Google Sheets';
+                el.syncBadge.className = 'px-2 py-1 rounded text-xs font-bold bg-gray-100 text-gray-700';
+                el.lastSyncText.textContent = 'ข้อมูลถูกเก็บสำรองในเครื่องนี้';
+                return;
+            }
+            if (pending > 0) {
+                el.syncBadge.textContent = `รอซิงก์ ${pending} รายการ`;
+                el.syncBadge.className = 'px-2 py-1 rounded text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200';
+            } else {
+                el.syncBadge.textContent = 'ซิงก์กับ Google Sheets แล้ว';
+                el.syncBadge.className = 'px-2 py-1 rounded text-xs font-bold bg-green-100 text-green-800 border border-green-200';
+            }
+            el.lastSyncText.textContent = state.meta.lastSyncAt ? `ซิงก์ล่าสุด ${new Date(state.meta.lastSyncAt).toLocaleString('th-TH')}` : 'พร้อมเชื่อมต่อ Google Sheets';
+        }
+
+        async function sheetsPost(payload) {
+            if (!settings.apiUrl) throw new Error('ยังไม่ได้ตั้งค่า Apps Script Web App URL');
+            await fetch(settings.apiUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ spreadsheetId: SPREADSHEET_ID, ...payload })
+            });
+            return { ok: true };
+        }
+
+        function sheetsLoadJsonp() {
+            if (!settings.apiUrl) return Promise.reject(new Error('ยังไม่ได้ตั้งค่า Apps Script Web App URL'));
+            return new Promise((resolve, reject) => {
+                const callbackName = `wargameJsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                const script = document.createElement('script');
+                const timeout = window.setTimeout(() => {
+                    cleanup();
+                    reject(new Error('โหลดข้อมูลจาก Google Sheets หมดเวลา'));
+                }, 20000);
+
+                function cleanup() {
+                    window.clearTimeout(timeout);
+                    delete window[callbackName];
+                    script.remove();
+                }
+
+                window[callbackName] = (json) => {
+                    cleanup();
+                    if (!json || !json.ok) {
+                        reject(new Error((json && json.error) || 'Google Sheets API error'));
+                        return;
+                    }
+                    resolve(json);
+                };
+
+                const url = new URL(settings.apiUrl);
+                url.searchParams.set('action', 'load');
+                url.searchParams.set('spreadsheetId', SPREADSHEET_ID);
+                url.searchParams.set('callback', callbackName);
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('โหลด Apps Script ไม่สำเร็จ กรุณาตรวจสิทธิ์ Deploy เป็น Anyone'));
+                };
+                script.src = url.toString();
+                document.body.appendChild(script);
+            });
+        }
+
+        async function syncNow(options = {}) {
+            if (syncInFlight || !settings.apiUrl) {
+                updateSyncUi();
+                return;
+            }
+            let queue = getPendingQueue();
+            if (queue.length === 0) {
+                queueOperations(snapshotOperations());
+                queue = getPendingQueue();
+                if (queue.length === 0) {
+                    if (!options.quiet) setSyncMessage('ไม่มีข้อมูลค้างส่ง', 'success');
+                    updateSyncUi();
+                    return;
+                }
+            }
+            syncInFlight = true;
+            setSyncMessage('กำลังซิงก์ข้อมูลไปยัง Google Sheets...');
+            try {
+                await sheetsPost({ action: 'sync', operations: queue, clientState: state });
+                setPendingQueue([]);
+                state.meta.lastSyncAt = nowIso();
+                saveLocalState();
+                setSyncMessage('ส่งข้อมูลไปยัง Google Sheets แล้ว หาก Apps Script เปิดสิทธิ์ถูกต้องข้อมูลจะเข้าชีต', 'success');
+            } catch (error) {
+                console.error(error);
+                if (!options.quiet) setSyncMessage(`ซิงก์ไม่สำเร็จ: ${error.message}`, 'error');
+            } finally {
+                syncInFlight = false;
+                updateSyncUi();
+            }
+        }
+
+        async function loadFromSheets() {
+            if (!settings.apiUrl) {
+                setSyncMessage('กรุณาใส่ Apps Script Web App URL ก่อนโหลดข้อมูล', 'error');
+                switchView('settings');
+                return;
+            }
+            setSyncMessage('กำลังโหลดข้อมูลจาก Google Sheets...');
+            try {
+                const json = await sheetsLoadJsonp();
+                state = mergeStates(state, normalizeState(json.state));
+                state.meta.lastSyncAt = nowIso();
+                saveLocalState();
+                renderAll();
+                setSyncMessage('โหลดข้อมูลจาก Google Sheets สำเร็จ', 'success');
+            } catch (error) {
+                console.error(error);
+                setSyncMessage(`โหลดข้อมูลไม่สำเร็จ: ${error.message}`, 'error');
+            }
+        }
+
+        function mergeStates(localState, remoteState) {
+            const merged = normalizeState(remoteState);
+            const reportMap = new Map();
+            [...remoteState.reports, ...localState.reports].forEach(report => {
+                const existing = reportMap.get(report.id);
+                if (!existing || new Date(report.updatedAt || 0) >= new Date(existing.updatedAt || 0)) {
+                    reportMap.set(report.id, report);
+                }
+            });
+            merged.reports = [...reportMap.values()];
+
+            const statusMap = new Map();
+            [...remoteState.activityStatuses, ...localState.activityStatuses].forEach(status => {
+                const existing = statusMap.get(status.id || status.name);
+                if (!existing || new Date(status.updatedAt || 0) >= new Date(existing.updatedAt || 0)) {
+                    statusMap.set(status.id || status.name, status);
+                }
+            });
+            merged.activityStatuses = [...statusMap.values()].filter(s => !s.deleted);
+            merged.appConfig = new Date(localState.meta.updatedAt || 0) > new Date(remoteState.meta.updatedAt || 0) ? localState.appConfig : remoteState.appConfig;
+            merged.meta = { ...merged.meta, updatedAt: nowIso() };
+            return merged;
+        }
+
+        function renderAll() {
+            updateAppTitlesUI();
+            updateStatusDropdown();
+            renderDashboardToggles();
+            renderDashboard();
+            renderEditTabs();
+            renderEditTable();
+            renderStatusTable();
+            updateSyncUi();
+        }
+
+        function updateAppTitlesUI() {
+            el.mainHeaderTitle.textContent = state.appConfig.mainTitle;
+            el.mainHeaderSubtitle.textContent = state.appConfig.subTitle;
+            el.pageTitle.textContent = state.appConfig.mainTitle;
+            el.footerTitle.textContent = state.appConfig.mainTitle;
+            document.getElementById('settingMainTitle').value = state.appConfig.mainTitle;
+            document.getElementById('settingSubTitle').value = state.appConfig.subTitle;
+        }
+
+        document.getElementById('appSettingsForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            state.appConfig.mainTitle = document.getElementById('settingMainTitle').value.trim() || defaultState.appConfig.mainTitle;
+            state.appConfig.subTitle = document.getElementById('settingSubTitle').value.trim();
+            saveLocalState();
+            queueOperation({ type: 'saveConfig', payload: state.appConfig });
+            updateAppTitlesUI();
+        });
+
+        function switchView(viewName) {
+            currentView = viewName;
+            el.viewDashboard.classList.add('hidden');
+            el.viewEdit.classList.add('hidden');
+            el.viewSettings.classList.add('hidden');
+            el.viewMap.classList.add('hidden');
+            [el.btnNavDashboard, el.btnNavEdit, el.btnNavMap, el.btnNavSettings].forEach(btn => {
+                btn.className = 'bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors';
+            });
+            const activeClass = 'bg-gold-500 hover:bg-gold-600 text-navy-900 px-4 py-2 rounded font-bold transition-colors';
+            if (viewName === 'dashboard') {
+                el.viewDashboard.classList.remove('hidden');
+                el.viewDashboard.classList.add('flex');
+                el.btnNavDashboard.className = activeClass;
+                renderDashboard();
+            } else if (viewName === 'edit') {
+                el.viewEdit.classList.remove('hidden');
+                el.viewEdit.classList.add('flex');
+                el.btnNavEdit.className = activeClass;
+                renderEditTable();
+            } else if (viewName === 'settings') {
+                el.viewSettings.classList.remove('hidden');
+                el.viewSettings.classList.add('flex');
+                el.btnNavSettings.className = activeClass;
+                renderStatusTable();
+            } else if (viewName === 'map') {
+                el.viewMap.classList.remove('hidden');
+                el.viewMap.classList.add('flex');
+                el.btnNavMap.className = activeClass;
+            }
+        }
+
+        function activeStatuses() {
+            return state.activityStatuses.filter(status => !status.deleted);
+        }
+
+        function activeReports(unit) {
+            return state.reports.filter(report => !report.deleted && (!unit || report.unit === unit));
+        }
+
         function updateStatusDropdown() {
-            reportStatusSelect.innerHTML = '';
-            activityStatuses.forEach(s => {
+            el.reportStatus.innerHTML = '';
+            activeStatuses().forEach(status => {
                 const opt = document.createElement('option');
-                opt.value = s.name;
-                opt.textContent = s.name;
-                reportStatusSelect.appendChild(opt);
+                opt.value = status.name;
+                opt.textContent = status.name;
+                el.reportStatus.appendChild(opt);
             });
         }
 
         function renderStatusTable() {
-            statusTableBody.innerHTML = '';
-            activityStatuses.forEach((s, index) => {
+            el.statusTableBody.innerHTML = '';
+            activeStatuses().forEach((status, index) => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50";
-                
+                const statusClass = getStatusClasses(status.color);
                 tr.innerHTML = `
-                    <td class="px-4 py-3 text-sm text-gray-900 font-medium">${s.name}</td>
-                    <td class="px-4 py-3 text-sm">
-                        <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusClasses(s.color)}">${s.name}</span>
-                    </td>
-                    <td class="px-4 py-3 text-center space-x-2 whitespace-nowrap">
-                        <button onclick="editStatus(${index})" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
-                            แก้ไข
-                        </button>
-                        <button onclick="deleteStatus(${index})" class="text-red-600 hover:text-red-800 font-bold text-sm bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition-colors">
-                            ลบ
-                        </button>
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">${escapeHtml(status.name)}</td>
+                    <td class="px-4 py-3 text-sm"><span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${statusClass}">${escapeHtml(status.name)}</span></td>
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                        <button onclick="editStatus(${index})" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded">แก้ไข</button>
+                        <button onclick="deleteStatus(${index})" class="text-red-600 hover:text-red-800 font-bold text-sm bg-red-50 hover:bg-red-100 px-3 py-1 rounded ml-2">ลบ</button>
                     </td>
                 `;
-                statusTableBody.appendChild(tr);
+                el.statusTableBody.appendChild(tr);
             });
         }
 
@@ -428,8 +692,8 @@
             document.getElementById('statusNameInput').value = '';
             document.getElementById('statusColorInput').value = 'green';
             document.getElementById('editingStatusIndex').value = '';
-            btnSubmitStatus.textContent = 'เพิ่มรายการ';
-            btnCancelStatusEdit.classList.add('hidden');
+            el.btnSubmitStatus.textContent = 'เพิ่ม';
+            el.btnCancelStatusEdit.classList.add('hidden');
         }
 
         function cancelStatusEdit() {
@@ -437,52 +701,57 @@
         }
 
         function editStatus(index) {
-            const s = activityStatuses[index];
-            document.getElementById('statusNameInput').value = s.name;
-            document.getElementById('statusColorInput').value = s.color;
-            document.getElementById('editingStatusIndex').value = index;
-            btnSubmitStatus.textContent = 'บันทึกการแก้ไข';
-            btnCancelStatusEdit.classList.remove('hidden');
+            const status = activeStatuses()[index];
+            document.getElementById('statusNameInput').value = status.name;
+            document.getElementById('statusColorInput').value = status.color;
+            document.getElementById('editingStatusIndex').value = status.id;
+            el.btnSubmitStatus.textContent = 'บันทึก';
+            el.btnCancelStatusEdit.classList.remove('hidden');
         }
 
         function deleteStatus(index) {
-            if(confirm('หากลบรายการนี้ ข้อมูลรายงานเดิมที่ใช้สถานะนี้จะยังคงอยู่ แต่จะไม่สามารถเลือกสถานะนี้ได้อีก แน่ใจหรือไม่?')) {
-                activityStatuses.splice(index, 1);
-                renderStatusTable();
-            }
+            const status = activeStatuses()[index];
+            if (!status || !confirm(`ต้องการลบสถานะ "${status.name}" ใช่หรือไม่?`)) return;
+            status.deleted = true;
+            status.updatedAt = nowIso();
+            saveLocalState();
+            queueOperation({ type: 'deleteStatus', payload: { id: status.id, updatedAt: status.updatedAt } });
+            updateStatusDropdown();
+            renderStatusTable();
+            renderDashboard();
         }
 
-        document.getElementById('statusForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('statusForm').addEventListener('submit', (event) => {
+            event.preventDefault();
             const name = document.getElementById('statusNameInput').value.trim();
             const color = document.getElementById('statusColorInput').value;
-            const index = document.getElementById('editingStatusIndex').value;
-            
+            const editingId = document.getElementById('editingStatusIndex').value;
             if (!name) return;
-
-            if (index !== '') {
-                activityStatuses[index] = { name, color };
+            let status = state.activityStatuses.find(item => item.id === editingId);
+            if (status) {
+                status.name = name;
+                status.color = color;
+                status.deleted = false;
+                status.updatedAt = nowIso();
             } else {
-                activityStatuses.push({ name, color });
+                status = { id: newId('status'), name, color, updatedAt: nowIso(), deleted: false };
+                state.activityStatuses.push(status);
             }
-            
-            resetStatusForm();
+            saveLocalState();
+            queueOperation({ type: 'upsertStatus', payload: status });
+            updateStatusDropdown();
             renderStatusTable();
+            renderDashboard();
+            resetStatusForm();
         });
 
-        // --- Dashboard Logic ---
         function renderDashboardToggles() {
-            dashboardToggles.innerHTML = '';
+            el.dashboardToggles.innerHTML = '';
             units.forEach(unit => {
                 const label = document.createElement('label');
-                label.className = "flex items-center space-x-2 cursor-pointer";
-                label.innerHTML = `
-                    <input type="checkbox" class="form-checkbox h-5 w-5 text-navy-600 rounded" 
-                           ${dashboardVisibility[unit] ? 'checked' : ''} 
-                           onchange="toggleDashboardUnit('${unit}', this.checked)">
-                    <span class="text-navy-800 font-medium">${unit}</span>
-                `;
-                dashboardToggles.appendChild(label);
+                label.className = 'inline-flex items-center gap-2 cursor-pointer';
+                label.innerHTML = `<input type="checkbox" ${dashboardVisibility[unit] ? 'checked' : ''} onchange="toggleDashboardUnit('${unit}', this.checked)" class="w-4 h-4 text-navy-600 rounded focus:ring-navy-500"><span class="text-sm font-medium">${unit}</span>`;
+                el.dashboardToggles.appendChild(label);
             });
         }
 
@@ -492,11 +761,11 @@
         }
 
         function checkAllToggles(checked) {
-            units.forEach(u => dashboardVisibility[u] = checked);
+            units.forEach(unit => dashboardVisibility[unit] = checked);
             renderDashboardToggles();
             renderDashboard();
         }
-        
+
         function clearDateFilter() {
             document.getElementById('dashboardStartDate').value = '';
             document.getElementById('dashboardEndDate').value = '';
@@ -504,77 +773,57 @@
         }
 
         function renderDashboard() {
-            dashboardGrid.innerHTML = '';
-            const visibleUnits = units.filter(u => dashboardVisibility[u]);
+            el.dashboardGrid.innerHTML = '';
+            const visibleUnits = units.filter(unit => dashboardVisibility[unit]);
             const startDateFilter = document.getElementById('dashboardStartDate').value;
             const endDateFilter = document.getElementById('dashboardEndDate').value;
-            
             if (visibleUnits.length === 0) {
-                dashboardGrid.innerHTML = `<div class="w-full text-center py-10 text-gray-500">ไม่ได้เลือกหน่วยใดเลย</div>`;
+                el.dashboardGrid.innerHTML = '<div class="w-full text-center py-10 text-gray-500">ไม่ได้เลือกหน่วยใดเลย</div>';
                 return;
             }
 
-            const minWidth = "min-w-[300px] w-[350px]";
-
             visibleUnits.forEach(unit => {
+                let filteredReports = activeReports(unit);
+                if (startDateFilter) filteredReports = filteredReports.filter(report => report.date >= startDateFilter);
+                if (endDateFilter) filteredReports = filteredReports.filter(report => report.date <= endDateFilter);
+                filteredReports.sort(sortReportsDesc);
+
                 const box = document.createElement('div');
-                box.className = `${minWidth} flex-shrink-0 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col h-full`;
-                
-                // Filter by date range if selected
-                let filteredReports = reports[unit];
-                if (startDateFilter) {
-                    filteredReports = filteredReports.filter(r => r.date >= startDateFilter);
-                }
-                if (endDateFilter) {
-                    filteredReports = filteredReports.filter(r => r.date <= endDateFilter);
-                }
-
-                let headerHtml = `
-                    <div class="bg-navy-700 text-white px-4 py-3 rounded-t-lg flex justify-between items-center shrink-0">
-                        <span class="font-bold text-lg">หน่วย ${unit}</span>
-                        <span class="bg-gold-500 text-navy-900 text-xs font-bold px-2 py-1 rounded-full">${filteredReports.length} รายการ</span>
-                    </div>
-                `;
-                
-                let contentHtml = `<div class="p-4 flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-3">`;
-                
+                box.className = 'min-w-[300px] w-[350px] flex-shrink-0 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col h-full';
+                let contentHtml = '<div class="p-4 flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-3">';
                 if (filteredReports.length === 0) {
-                    contentHtml += `<div class="text-center text-gray-400 py-10">ไม่มีข้อมูลในช่วงเวลานี้</div>`;
+                    contentHtml += '<div class="text-center text-gray-400 py-10">ไม่มีข้อมูลในช่วงเวลานี้</div>';
                 } else {
-                    const sorted = [...filteredReports].sort((a,b) => {
-                        const dtA = new Date(`${a.date}T${a.time}`);
-                        const dtB = new Date(`${b.date}T${b.time}`);
-                        return dtB - dtA; // Latest first
-                    });
-
-                    sorted.forEach(rep => {
-                        const sConf = activityStatuses.find(s => s.name === rep.status);
-                        const statusColorClass = sConf ? getStatusClasses(sConf.color) : getStatusClasses('gray');
-                        
+                    filteredReports.forEach(report => {
+                        const status = activeStatuses().find(item => item.name === report.status);
+                        const statusClass = getStatusClasses(status ? status.color : 'gray');
                         contentHtml += `
                             <div class="border-l-4 border-navy-500 pl-3 py-1 bg-gray-50 rounded-r-md">
-                                <div class="text-xs text-gray-500 mb-1"><span class="font-bold text-navy-600">${formatDate(rep.date)}</span> • ${rep.time} น.</div>
-                                <div class="text-sm text-gray-800 mb-2">${rep.details}</div>
-                                <span class="px-2 py-0.5 inline-flex text-[11px] leading-4 font-semibold rounded ${statusColorClass}">${rep.status}</span>
+                                <div class="text-xs text-gray-500 mb-1"><span class="font-bold text-navy-600">${formatDate(report.date)}</span> · ${escapeHtml(report.time)} น.</div>
+                                <div class="text-sm text-gray-800 mb-2 whitespace-pre-wrap">${escapeHtml(report.details)}</div>
+                                <span class="px-2 py-0.5 inline-flex text-[11px] leading-4 font-semibold rounded ${statusClass}">${escapeHtml(report.status)}</span>
                             </div>
                         `;
                     });
                 }
-                
-                contentHtml += `</div>`;
-                box.innerHTML = headerHtml + contentHtml;
-                dashboardGrid.appendChild(box);
+                contentHtml += '</div>';
+                box.innerHTML = `
+                    <div class="bg-navy-700 text-white px-4 py-3 rounded-t-lg flex justify-between items-center shrink-0">
+                        <span class="font-bold text-lg">หน่วย ${unit}</span>
+                        <span class="bg-gold-500 text-navy-900 text-xs font-bold px-2 py-1 rounded-full">${filteredReports.length} รายการ</span>
+                    </div>
+                    ${contentHtml}
+                `;
+                el.dashboardGrid.appendChild(box);
             });
         }
 
-        // --- Edit Logic ---
         function renderEditTabs() {
-            unitTabsContainer.innerHTML = '';
+            el.unitTabs.innerHTML = '';
             units.forEach(unit => {
                 const btn = document.createElement('button');
                 const isActive = unit === currentUnitEdit;
-                btn.className = `px-6 py-3 text-sm font-medium transition-colors focus:outline-none 
-                                 ${isActive ? 'tab-active bg-navy-700 rounded-t-lg' : 'tab-inactive hover:bg-navy-700 rounded-t-lg'}`;
+                btn.className = `px-6 py-3 text-sm font-medium transition-colors focus:outline-none ${isActive ? 'tab-active bg-navy-700 rounded-t-lg' : 'tab-inactive hover:bg-navy-700 rounded-t-lg'}`;
                 btn.textContent = `หน่วย ${unit}`;
                 btn.onclick = () => {
                     cancelEdit();
@@ -584,7 +833,7 @@
                     renderEditTabs();
                     renderEditTable();
                 };
-                unitTabsContainer.appendChild(btn);
+                el.unitTabs.appendChild(btn);
             });
             document.getElementById('formUnitLabel').textContent = currentUnitEdit;
             document.getElementById('tableUnitLabel').textContent = currentUnitEdit;
@@ -593,124 +842,111 @@
         function resetForm() {
             const now = new Date();
             document.getElementById('reportDate').valueAsDate = now;
-            document.getElementById('reportTime').value = now.toTimeString().slice(0,5);
+            document.getElementById('reportTime').value = now.toTimeString().slice(0, 5);
             document.getElementById('reportDetails').value = '';
-            if(activityStatuses.length > 0) {
-                document.getElementById('reportStatus').value = activityStatuses[0].name;
-            }
+            if (activeStatuses().length > 0) document.getElementById('reportStatus').value = activeStatuses()[0].name;
             document.getElementById('editingReportId').value = '';
-            
-            formTitle.innerHTML = `<svg class="w-5 h-5 mr-2 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">${currentUnitEdit}</span>`;
-            btnSubmitForm.textContent = 'บันทึกข้อมูล';
-            btnSubmitForm.className = 'bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow transition-colors';
-            btnCancelEdit.classList.add('hidden');
+            el.formTitle.innerHTML = `บันทึกรายงานใหม่: หน่วย <span id="formUnitLabel" class="text-gold-600 ml-1">${currentUnitEdit}</span>`;
+            el.btnSubmitForm.textContent = 'บันทึกข้อมูล';
+            el.btnSubmitForm.className = 'bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-8 rounded shadow transition-colors';
+            el.btnCancelEdit.classList.add('hidden');
         }
 
         function renderEditTable() {
-            reportTableBody.innerHTML = '';
-            const data = reports[currentUnitEdit] || [];
-            
-            if (data.length === 0) {
-                reportTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500">ไม่มีข้อมูล</td></tr>`;
+            el.reportTableBody.innerHTML = '';
+            const rows = activeReports(currentUnitEdit).sort(sortReportsDesc);
+            if (rows.length === 0) {
+                el.reportTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-500">ไม่มีข้อมูล</td></tr>';
                 return;
             }
-            
-            const sorted = [...data].sort((a,b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
-            
-            sorted.forEach(rep => {
+            rows.forEach(report => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50";
-                
-                const sConf = activityStatuses.find(s => s.name === rep.status);
-                const statusColorClass = sConf ? getStatusClasses(sConf.color) : getStatusClasses('gray');
-                
+                tr.className = 'hover:bg-gray-50';
+                const status = activeStatuses().find(item => item.name === report.status);
+                const statusClass = getStatusClasses(status ? status.color : 'gray');
                 tr.innerHTML = `
                     <td class="px-4 py-3 text-sm text-gray-900">
-                        <div class="font-medium">${formatDate(rep.date)}</div>
-                        <div class="text-xs text-gray-500">${rep.time} น.</div>
+                        <div class="font-medium">${formatDate(report.date)}</div>
+                        <div class="text-xs text-gray-500">${escapeHtml(report.time)} น.</div>
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-800">${rep.details}</td>
-                    <td class="px-4 py-3 text-sm">
-                        <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${statusColorClass}">${rep.status}</span>
-                    </td>
-                    <td class="px-4 py-3 text-center space-x-2 whitespace-nowrap">
-                        <button onclick="editReport('${currentUnitEdit}', ${rep.id})" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
-                            แก้ไข
-                        </button>
-                        <button onclick="deleteReport('${currentUnitEdit}', ${rep.id})" class="text-red-600 hover:text-red-800 font-bold text-sm bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition-colors">
-                            ลบ
-                        </button>
+                    <td class="px-4 py-3 text-sm text-gray-800 whitespace-pre-wrap">${escapeHtml(report.details)}</td>
+                    <td class="px-4 py-3 text-sm"><span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${statusClass}">${escapeHtml(report.status)}</span></td>
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                        <button onclick="editReport('${report.id}')" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded">แก้ไข</button>
+                        <button onclick="deleteReport('${report.id}')" class="text-red-600 hover:text-red-800 font-bold text-sm bg-red-50 hover:bg-red-100 px-3 py-1 rounded ml-2">ลบ</button>
                     </td>
                 `;
-                reportTableBody.appendChild(tr);
+                el.reportTableBody.appendChild(tr);
             });
         }
 
-        // --- Actions ---
-        document.getElementById('reportForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const date = document.getElementById('reportDate').value;
-            const time = document.getElementById('reportTime').value;
-            const details = document.getElementById('reportDetails').value;
-            const status = document.getElementById('reportStatus').value;
-            const editId = document.getElementById('editingReportId').value;
-            
-            if (editId) {
-                const index = reports[currentUnitEdit].findIndex(r => r.id == editId);
-                if (index !== -1) {
-                    reports[currentUnitEdit][index] = { id: parseInt(editId), date, time, details, status };
-                }
-            } else {
-                reports[currentUnitEdit].push({ id: Date.now(), date, time, details, status });
-            }
-            
+        document.getElementById('reportForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const report = {
+                id: document.getElementById('editingReportId').value || newId('report'),
+                unit: currentUnitEdit,
+                date: document.getElementById('reportDate').value,
+                time: document.getElementById('reportTime').value,
+                details: document.getElementById('reportDetails').value.trim(),
+                status: document.getElementById('reportStatus').value,
+                updatedAt: nowIso(),
+                deleted: false
+            };
+            const existingIndex = state.reports.findIndex(item => item.id === report.id);
+            if (existingIndex >= 0) state.reports[existingIndex] = report;
+            else state.reports.push(report);
+            saveLocalState();
+            queueOperation({ type: 'upsertReport', payload: report });
             resetForm();
             renderEditTable();
-            if(currentView === 'dashboard') renderDashboard();
+            renderDashboard();
         });
 
-        function editReport(unit, id) {
-            const report = reports[unit].find(r => r.id === id);
-            if (report) {
-                document.getElementById('editingReportId').value = report.id;
-                document.getElementById('reportDate').value = report.date;
-                document.getElementById('reportTime').value = report.time;
-                document.getElementById('reportDetails').value = report.details;
-                
-                // Ensure option exists or add it temporarily
-                let exists = false;
-                for (let i = 0; i < reportStatusSelect.options.length; i++) {
-                    if (reportStatusSelect.options[i].value === report.status) exists = true;
-                }
-                if(!exists) {
-                    const opt = document.createElement('option');
-                    opt.value = report.status; opt.textContent = report.status;
-                    reportStatusSelect.appendChild(opt);
-                }
-                document.getElementById('reportStatus').value = report.status;
-                
-                formTitle.innerHTML = `<svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> แก้ไขรายงาน: หน่วย <span id="formUnitLabel" class="text-blue-600 ml-1">${unit}</span>`;
-                btnSubmitForm.textContent = 'บันทึกการแก้ไข';
-                btnSubmitForm.className = 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded shadow transition-colors';
-                btnCancelEdit.classList.remove('hidden');
-                
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+        function editReport(id) {
+            const report = state.reports.find(item => item.id === id);
+            if (!report) return;
+            currentUnitEdit = report.unit;
+            renderEditTabs();
+            document.getElementById('editingReportId').value = report.id;
+            document.getElementById('reportDate').value = report.date;
+            document.getElementById('reportTime').value = report.time;
+            document.getElementById('reportDetails').value = report.details;
+            ensureStatusOption(report.status);
+            document.getElementById('reportStatus').value = report.status;
+            el.formTitle.innerHTML = `แก้ไขรายงาน: หน่วย <span id="formUnitLabel" class="text-blue-600 ml-1">${report.unit}</span>`;
+            el.btnSubmitForm.textContent = 'บันทึกการแก้ไข';
+            el.btnSubmitForm.className = 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded shadow transition-colors';
+            el.btnCancelEdit.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function ensureStatusOption(statusName) {
+            if ([...el.reportStatus.options].some(option => option.value === statusName)) return;
+            const opt = document.createElement('option');
+            opt.value = statusName;
+            opt.textContent = statusName;
+            el.reportStatus.appendChild(opt);
         }
 
         function cancelEdit() {
             resetForm();
         }
 
-        function deleteReport(unit, id) {
-            if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายงานนี้?')) {
-                reports[unit] = reports[unit].filter(r => r.id !== id);
-                renderEditTable();
-                if(currentView === 'dashboard') renderDashboard();
-            }
+        function deleteReport(id) {
+            const report = state.reports.find(item => item.id === id);
+            if (!report || !confirm('ต้องการลบรายงานนี้ใช่หรือไม่?')) return;
+            report.deleted = true;
+            report.updatedAt = nowIso();
+            saveLocalState();
+            queueOperation({ type: 'deleteReport', payload: { id: report.id, updatedAt: report.updatedAt } });
+            renderEditTable();
+            renderDashboard();
         }
 
-        // --- Helpers ---
+        function sortReportsDesc(a, b) {
+            return new Date(`${b.date}T${b.time || '00:00'}`) - new Date(`${a.date}T${a.time || '00:00'}`);
+        }
+
         function getStatusClasses(color) {
             const colors = {
                 green: 'bg-green-100 text-green-800 border border-green-200',
@@ -724,32 +960,114 @@
         }
 
         function formatDate(dateStr) {
-            return new Date(dateStr).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric' });
+            if (!dateStr) return '-';
+            return new Date(`${dateStr}T00:00:00`).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric' });
         }
 
-        // Fullscreen Toggle Function
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[char]));
+        }
+
+        function getUnitReportRows(unit = currentUnitEdit) {
+            return activeReports(unit).sort(sortReportsDesc);
+        }
+
+        function buildUnitReportHtml(unit = currentUnitEdit) {
+            const rows = getUnitReportRows(unit);
+            const generatedAt = new Date().toLocaleString('th-TH');
+            const bodyRows = rows.length ? rows.map((report, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${escapeHtml(formatDate(report.date))}</td>
+                    <td>${escapeHtml(report.time)} น.</td>
+                    <td>${escapeHtml(report.details).replace(/\n/g, '<br>')}</td>
+                    <td>${escapeHtml(report.status)}</td>
+                </tr>
+            `).join('') : '<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
+
+            return `
+                <!DOCTYPE html>
+                <html lang="th">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>รายงานหน่วย ${escapeHtml(unit)}</title>
+                    <style>
+                        body { font-family: "Sarabun", Arial, sans-serif; color: #111827; padding: 24px; }
+                        h1 { font-size: 22px; margin: 0 0 6px; }
+                        .meta { color: #4b5563; font-size: 13px; margin-bottom: 18px; }
+                        table { border-collapse: collapse; width: 100%; font-size: 13px; }
+                        th { background: #102a43; color: #fff; text-align: left; }
+                        th, td { border: 1px solid #cbd5e1; padding: 8px; vertical-align: top; }
+                        td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(5) { white-space: nowrap; }
+                        .empty { text-align: center; color: #6b7280; padding: 18px; }
+                        @media print { body { padding: 0; } button { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>${escapeHtml(state.appConfig.mainTitle)} - หน่วย ${escapeHtml(unit)}</h1>
+                    <div class="meta">${escapeHtml(state.appConfig.subTitle)} | สร้างรายงาน: ${escapeHtml(generatedAt)}</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ลำดับ</th>
+                                <th>วันที่</th>
+                                <th>เวลา</th>
+                                <th>สถานการณ์ปฏิบัติการ</th>
+                                <th>ผลสัมฤทธิ์</th>
+                            </tr>
+                        </thead>
+                        <tbody>${bodyRows}</tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+        }
+
+        function downloadUnitExcel() {
+            const unit = currentUnitEdit;
+            const html = buildUnitReportHtml(unit);
+            const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `wargame-report-${unit}-${new Date().toISOString().slice(0, 10)}.xls`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function downloadUnitPdf() {
+            const unit = currentUnitEdit;
+            const reportWindow = window.open('', '_blank');
+            if (!reportWindow) {
+                alert('กรุณาอนุญาต pop-up เพื่อสร้างรายงาน PDF');
+                return;
+            }
+            reportWindow.document.open();
+            reportWindow.document.write(buildUnitReportHtml(unit));
+            reportWindow.document.close();
+            reportWindow.focus();
+            setTimeout(() => reportWindow.print(), 300);
+        }
+
+        function downloadBackup() {
+            const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `wargame-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
         function toggleFullscreen() {
             const mapContainer = document.getElementById('viewMap');
             if (!document.fullscreenElement) {
-                if (mapContainer.requestFullscreen) {
-                    mapContainer.requestFullscreen();
-                } else if (mapContainer.webkitRequestFullscreen) { /* Safari */
-                    mapContainer.webkitRequestFullscreen();
-                } else if (mapContainer.msRequestFullscreen) { /* IE11 */
-                    mapContainer.msRequestFullscreen();
-                }
+                mapContainer.requestFullscreen?.();
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) { /* Safari */
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) { /* IE11 */
-                    document.msExitFullscreen();
-                }
+                document.exitFullscreen?.();
             }
         }
 
-        // Start
         init();
     </script>
 </body>
