@@ -173,6 +173,11 @@
                             <input type="text" id="pendingSummary" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" readonly>
                         </div>
                     </div>
+                    <div class="bg-yellow-50 border border-yellow-200 rounded p-4">
+                        <label class="block text-sm font-bold text-yellow-900 mb-1">รหัสยืนยันก่อนบันทึกการเชื่อมต่อ</label>
+                        <input type="password" id="connectionConfirmCode" class="w-full md:w-72 px-3 py-2 border border-yellow-300 rounded-md focus:ring-2 focus:ring-gold-500" placeholder="กรอกรหัสเพื่อยืนยัน">
+                        <p class="text-xs text-yellow-800 mt-2">ใช้เพื่อป้องกันการกดบันทึกผิดในส่วนการเชื่อมต่อ Google Sheets</p>
+                    </div>
                     <div class="flex flex-wrap justify-end gap-2">
                         <button type="button" onclick="saveApiSettings()" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow">บันทึกการเชื่อมต่อ</button>
                         <button type="button" onclick="loadFromSheets()" class="bg-navy-700 hover:bg-navy-800 text-white font-bold py-2 px-6 rounded shadow">ทดสอบโหลดข้อมูล</button>
@@ -344,7 +349,8 @@
         const SETTINGS_KEY = 'wargame_settings_v3';
         const SPREADSHEET_ID = '1fHx-iquw-pGeWmHsr0szKxylxIhlFpmujU5PYqvmP0w';
         const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzMTDlYdpqXduJNrPCtH_KCI0NLuVSrmOwjKuQTUMgkD-ceN_EjplhgtCfg5dGj2dcOUg/exec';
-        const APP_VERSION = '3.1';
+        const APP_VERSION = '3.2';
+        const CONNECTION_CONFIRM_CODE = 'ncsc86';
         const units = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7'];
 
         const defaultState = {
@@ -515,9 +521,16 @@
         }
 
         function saveApiSettings() {
+            const confirmCode = document.getElementById('connectionConfirmCode').value.trim();
+            if (confirmCode !== CONNECTION_CONFIRM_CODE) {
+                setSyncMessage('รหัสยืนยันไม่ถูกต้อง จึงไม่บันทึกการเชื่อมต่อ Google Sheets', 'error');
+                document.getElementById('connectionConfirmCode').focus();
+                return;
+            }
             settings.apiUrl = document.getElementById('settingApiUrl').value.trim();
             settings.spreadsheetId = SPREADSHEET_ID;
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+            document.getElementById('connectionConfirmCode').value = '';
             updateSyncUi();
             if (settings.apiUrl && getPendingQueue().length === 0) {
                 queueOperations(snapshotOperations());
