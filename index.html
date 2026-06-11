@@ -56,6 +56,9 @@
                 <button onclick="switchView('settings')" id="btnNavSettings" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">
                     ข้อมูลพื้นฐาน
                 </button>
+                <button onclick="switchView('map')" id="btnNavMap" class="bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors">
+                    แผนที่ปฏิบัติการ
+                </button>
             </div>
         </div>
     </header>
@@ -236,11 +239,22 @@
 
         </div>
 
+        <!-- ================= MAP VIEW ================= -->
+        <div id="viewMap" class="flex-col hidden grow bg-navy-800 rounded-lg overflow-hidden border-2 border-gold-500 min-h-[600px] relative">
+            <iframe id="mapIframe" src="custom_map.html?map=001pubgmap.png" allow="autoplay; fullscreen" class="absolute inset-0 w-full h-full border-0"></iframe>
+            <!-- Fullscreen Button -->
+            <button onclick="toggleFullscreen()" class="absolute top-4 right-4 z-[1000] bg-navy-900/80 hover:bg-gold-500 text-white hover:text-navy-900 border border-gold-500 p-2 rounded shadow-lg transition-colors flex items-center justify-center" title="เต็มจอ">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                </svg>
+            </button>
+        </div>
+
     </main>
 
     <footer class="bg-navy-900 text-white py-4 mt-auto">
         <div class="container mx-auto px-4 text-center text-sm text-gray-400">
-            &copy; 2026 <span id="footerTitle">ระบบรายงานสถานการณ์ Wargame</span>. All rights reserved. | <span class="text-gold-500">เวอร์ชัน 2.3 (แก้ไขชื่อระบบได้)</span>
+            &copy; 2026 <span id="footerTitle">ระบบรายงานสถานการณ์ Wargame</span>. All rights reserved. | <span class="text-gold-500">เวอร์ชัน 2.3 (รวมระบบแผนที่และตั้งค่าหัวเว็บ)</span>
         </div>
     </footer>
 
@@ -256,6 +270,7 @@
         let currentView = 'dashboard'; 
         let dashboardVisibility = { N1:true, N2:true, N3:true, N4:true, N5:true, N6:true, N7:true };
         
+        // Master Data: Activity Statuses
         let activityStatuses = [
             { name: 'สำเร็จตามเป้าหมาย', color: 'green' },
             { name: 'สำเร็จบางส่วน', color: 'indigo' },
@@ -279,14 +294,15 @@
         const viewDashboard = document.getElementById('viewDashboard');
         const viewEdit = document.getElementById('viewEdit');
         const viewSettings = document.getElementById('viewSettings');
-        const btnNavDashboard = document.getElementById('btnNavDashboard');
-        const btnNavEdit = document.getElementById('btnNavEdit');
-        const btnNavSettings = document.getElementById('btnNavSettings');
-        
+        const viewMap = document.getElementById('viewMap');
         const mainHeaderTitle = document.getElementById('mainHeaderTitle');
         const mainHeaderSubtitle = document.getElementById('mainHeaderSubtitle');
         const pageTitle = document.getElementById('pageTitle');
         const footerTitle = document.getElementById('footerTitle');
+        const btnNavDashboard = document.getElementById('btnNavDashboard');
+        const btnNavEdit = document.getElementById('btnNavEdit');
+        const btnNavMap = document.getElementById('btnNavMap');
+        const btnNavSettings = document.getElementById('btnNavSettings');
         
         const dashboardGrid = document.getElementById('dashboardGrid');
         const dashboardToggles = document.getElementById('dashboardToggles');
@@ -345,11 +361,13 @@
             viewDashboard.classList.add('hidden'); viewDashboard.classList.remove('flex');
             viewEdit.classList.add('hidden'); viewEdit.classList.remove('flex');
             viewSettings.classList.add('hidden'); viewSettings.classList.remove('flex');
+            viewMap.classList.add('hidden'); viewMap.classList.remove('flex');
             
             // Reset buttons
             btnNavDashboard.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
             btnNavEdit.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
             btnNavSettings.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
+            btnNavMap.className = "bg-transparent border border-gold-500 hover:bg-navy-700 text-gold-500 px-4 py-2 rounded font-bold transition-colors";
             
             // Show selected
             if (viewName === 'dashboard') {
@@ -365,6 +383,9 @@
                 viewSettings.classList.remove('hidden'); viewSettings.classList.add('flex');
                 btnNavSettings.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
                 renderStatusTable();
+            } else if (viewName === 'map') {
+                viewMap.classList.remove('hidden'); viewMap.classList.add('flex');
+                btnNavMap.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
             }
         }
 
@@ -425,7 +446,7 @@
         }
 
         function deleteStatus(index) {
-            if(confirm('แน่ใจหรือไม่ว่าต้องการลบสถานะนี้?')) {
+            if(confirm('หากลบรายการนี้ ข้อมูลรายงานเดิมที่ใช้สถานะนี้จะยังคงอยู่ แต่จะไม่สามารถเลือกสถานะนี้ได้อีก แน่ใจหรือไม่?')) {
                 activityStatuses.splice(index, 1);
                 renderStatusTable();
             }
@@ -499,6 +520,7 @@
                 const box = document.createElement('div');
                 box.className = `${minWidth} flex-shrink-0 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col h-full`;
                 
+                // Filter by date range if selected
                 let filteredReports = reports[unit];
                 if (startDateFilter) {
                     filteredReports = filteredReports.filter(r => r.date >= startDateFilter);
@@ -655,6 +677,7 @@
                 document.getElementById('reportTime').value = report.time;
                 document.getElementById('reportDetails').value = report.details;
                 
+                // Ensure option exists or add it temporarily
                 let exists = false;
                 for (let i = 0; i < reportStatusSelect.options.length; i++) {
                     if (reportStatusSelect.options[i].value === report.status) exists = true;
@@ -702,6 +725,28 @@
 
         function formatDate(dateStr) {
             return new Date(dateStr).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric' });
+        }
+
+        // Fullscreen Toggle Function
+        function toggleFullscreen() {
+            const mapContainer = document.getElementById('viewMap');
+            if (!document.fullscreenElement) {
+                if (mapContainer.requestFullscreen) {
+                    mapContainer.requestFullscreen();
+                } else if (mapContainer.webkitRequestFullscreen) { /* Safari */
+                    mapContainer.webkitRequestFullscreen();
+                } else if (mapContainer.msRequestFullscreen) { /* IE11 */
+                    mapContainer.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
         }
 
         // Start
