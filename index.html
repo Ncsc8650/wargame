@@ -40,7 +40,7 @@
                     <h1 id="mainHeaderTitle" class="text-2xl font-bold tracking-wide">ระบบรายงานสถานการณ์ Wargame</h1>
                     <p class="text-sm text-gold-400">
                         <span id="mainHeaderSubtitle">โรงเรียนเสนาธิการทหารเรือ</span>
-                        <span class="ml-2 px-2 py-0.5 bg-navy-700 rounded text-xs text-white">เวอร์ชัน 3.0</span>
+                        <span id="appVersionBadge" class="ml-2 px-2 py-0.5 bg-navy-700 rounded text-xs text-white">เวอร์ชัน 3.1</span>
                     </p>
                 </div>
             </div>
@@ -72,6 +72,9 @@
                         <button onclick="clearDateFilter()" class="text-xs text-gray-500 hover:text-red-500 ml-2">ล้างตัวกรอง</button>
                     </div>
                 </div>
+            </div>
+            <div class="mb-4 flex justify-end">
+                <button type="button" onclick="openMissionSummary()" class="bg-navy-800 hover:bg-navy-900 text-white border border-gold-500 font-bold px-4 py-2 rounded shadow text-sm">สรุปภารกิจทั้งหมด</button>
             </div>
             <div id="dashboardGrid" class="flex flex-row overflow-x-auto gap-4 pb-4 items-stretch grow h-0 min-h-[500px]"></div>
         </div>
@@ -191,6 +194,10 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อหัวข้อรอง</label>
                         <input type="text" id="settingSubTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500">
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ข้อความ Footer ของเว็บไซต์</label>
+                        <input type="text" id="settingFooterText" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500" placeholder="เช่น เชื่อมต่อ Google Sheets พร้อมระบบสำรองข้อมูลในเครื่อง">
+                    </div>
                     <div class="flex justify-end">
                         <button type="submit" class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-6 rounded shadow">บันทึกการเปลี่ยนแปลง</button>
                     </div>
@@ -298,9 +305,36 @@
         </div>
     </div>
 
+    <div id="missionSummaryModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-navy-900/75 px-4">
+        <div class="w-full max-w-5xl bg-navy-900 text-white border-2 border-gold-500 shadow-2xl">
+            <div class="border-b border-gold-500/60 px-5 py-4 bg-navy-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <p class="text-xs text-gold-400 font-bold tracking-[0.2em] uppercase">Mission Readiness Board</p>
+                    <h3 class="text-2xl font-bold">สรุปสถานะภารกิจรายหน่วย</h3>
+                </div>
+                <button type="button" onclick="closeMissionSummary()" class="self-start sm:self-center border border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-navy-900 font-bold px-4 py-2">ปิด</button>
+            </div>
+            <div class="px-5 py-4 grid grid-cols-1 md:grid-cols-3 gap-3 bg-navy-800/80 border-b border-gold-500/40">
+                <div class="border border-gold-500/50 p-3">
+                    <div class="text-xs text-gray-300">ภารกิจทั้งหมด</div>
+                    <div id="missionTotalAll" class="text-3xl font-bold text-gold-400">0</div>
+                </div>
+                <div class="border border-emerald-400/50 p-3">
+                    <div class="text-xs text-gray-300">เสร็จสิ้นแล้ว</div>
+                    <div id="missionDoneAll" class="text-3xl font-bold text-emerald-300">0</div>
+                </div>
+                <div class="border border-yellow-300/50 p-3">
+                    <div class="text-xs text-gray-300">อยู่ระหว่างดำเนินการ</div>
+                    <div id="missionOpenAll" class="text-3xl font-bold text-yellow-300">0</div>
+                </div>
+            </div>
+            <div id="missionSummaryGrid" class="p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 max-h-[65vh] overflow-y-auto custom-scrollbar"></div>
+        </div>
+    </div>
+
     <footer class="bg-navy-900 text-white py-4 mt-auto">
         <div class="container mx-auto px-4 text-center text-sm text-gray-400">
-            &copy; 2026 <span id="footerTitle">ระบบรายงานสถานการณ์ Wargame</span>. <span class="text-gold-500">เชื่อมต่อ Google Sheets พร้อมระบบสำรองข้อมูลในเครื่อง</span>
+            &copy; 2026 <span id="footerTitle">ระบบรายงานสถานการณ์ Wargame</span>. <span id="footerInfo" class="text-gold-500">เชื่อมต่อ Google Sheets พร้อมระบบสำรองข้อมูลในเครื่อง</span>
         </div>
     </footer>
 
@@ -310,12 +344,14 @@
         const SETTINGS_KEY = 'wargame_settings_v3';
         const SPREADSHEET_ID = '1fHx-iquw-pGeWmHsr0szKxylxIhlFpmujU5PYqvmP0w';
         const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzMTDlYdpqXduJNrPCtH_KCI0NLuVSrmOwjKuQTUMgkD-ceN_EjplhgtCfg5dGj2dcOUg/exec';
+        const APP_VERSION = '3.1';
         const units = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7'];
 
         const defaultState = {
             appConfig: {
                 mainTitle: 'ระบบรายงานสถานการณ์ Wargame',
-                subTitle: 'โรงเรียนเสนาธิการทหารเรือ'
+                subTitle: 'โรงเรียนเสนาธิการทหารเรือ',
+                footerText: 'เชื่อมต่อ Google Sheets พร้อมระบบสำรองข้อมูลในเครื่อง'
             },
             activityStatuses: [
                 { id: 'status_success', name: 'สำเร็จตามเป้าหมาย', color: 'green', updatedAt: nowIso() },
@@ -377,11 +413,12 @@
 
         function bindDom() {
             [
-                'viewDashboard', 'viewEdit', 'viewSettings', 'viewMap', 'mainHeaderTitle', 'mainHeaderSubtitle', 'pageTitle', 'footerTitle',
+                'viewDashboard', 'viewEdit', 'viewSettings', 'viewMap', 'mainHeaderTitle', 'mainHeaderSubtitle', 'pageTitle', 'footerTitle', 'footerInfo', 'appVersionBadge',
                 'btnNavDashboard', 'btnNavEdit', 'btnNavMap', 'btnNavSettings', 'dashboardGrid', 'dashboardToggles', 'unitTabs',
                 'reportTableBody', 'formTitle', 'btnSubmitForm', 'btnCancelEdit', 'reportStatus', 'statusTableBody', 'btnSubmitStatus',
                 'btnCancelStatusEdit', 'unitLabelsTableBody', 'finalizeModal', 'finalizeReportId', 'finalStatusSelect', 'finalDateInput',
-                'finalTimeInput', 'finalNoteInput', 'syncBadge', 'lastSyncText', 'syncMessage', 'pendingSummary'
+                'finalTimeInput', 'finalNoteInput', 'missionSummaryModal', 'missionSummaryGrid', 'missionTotalAll', 'missionDoneAll',
+                'missionOpenAll', 'syncBadge', 'lastSyncText', 'syncMessage', 'pendingSummary'
             ].forEach(id => el[id] = document.getElementById(id));
         }
 
@@ -700,14 +737,18 @@
             el.mainHeaderSubtitle.textContent = state.appConfig.subTitle;
             el.pageTitle.textContent = state.appConfig.mainTitle;
             el.footerTitle.textContent = state.appConfig.mainTitle;
+            el.footerInfo.textContent = state.appConfig.footerText || defaultState.appConfig.footerText;
+            el.appVersionBadge.textContent = `เวอร์ชัน ${APP_VERSION}`;
             document.getElementById('settingMainTitle').value = state.appConfig.mainTitle;
             document.getElementById('settingSubTitle').value = state.appConfig.subTitle;
+            document.getElementById('settingFooterText').value = state.appConfig.footerText || defaultState.appConfig.footerText;
         }
 
         document.getElementById('appSettingsForm').addEventListener('submit', (event) => {
             event.preventDefault();
             state.appConfig.mainTitle = document.getElementById('settingMainTitle').value.trim() || defaultState.appConfig.mainTitle;
             state.appConfig.subTitle = document.getElementById('settingSubTitle').value.trim();
+            state.appConfig.footerText = document.getElementById('settingFooterText').value.trim() || defaultState.appConfig.footerText;
             saveLocalState();
             queueOperation({ type: 'saveConfig', payload: state.appConfig });
             updateAppTitlesUI();
@@ -728,6 +769,7 @@
                 el.viewDashboard.classList.add('flex');
                 el.btnNavDashboard.className = activeClass;
                 renderDashboard();
+                openMissionSummary();
             } else if (viewName === 'edit') {
                 el.viewEdit.classList.remove('hidden');
                 el.viewEdit.classList.add('flex');
@@ -752,6 +794,14 @@
 
         function activeReports(unit) {
             return state.reports.filter(report => !report.deleted && (!unit || report.unit === unit));
+        }
+
+        function getReportCurrentStatus(report) {
+            return (report.finalStatus || report.status || '').trim();
+        }
+
+        function isReportCompleted(report) {
+            return Boolean((report.finalStatus || '').trim());
         }
 
         function getUnitLabelRecord(unit) {
@@ -913,6 +963,70 @@
             renderDashboard();
         }
 
+        function getUnitMissionStats(unit) {
+            const reports = activeReports(unit);
+            const completed = reports.filter(isReportCompleted).length;
+            return {
+                unit,
+                total: reports.length,
+                completed,
+                open: reports.length - completed,
+                percent: reports.length ? Math.round((completed / reports.length) * 100) : 0
+            };
+        }
+
+        function renderMissionSummary() {
+            const stats = units.map(getUnitMissionStats);
+            const totalAll = stats.reduce((sum, item) => sum + item.total, 0);
+            const doneAll = stats.reduce((sum, item) => sum + item.completed, 0);
+            const openAll = stats.reduce((sum, item) => sum + item.open, 0);
+            el.missionTotalAll.textContent = totalAll;
+            el.missionDoneAll.textContent = doneAll;
+            el.missionOpenAll.textContent = openAll;
+            el.missionSummaryGrid.innerHTML = stats.map(item => `
+                <div class="border border-gold-500/60 bg-navy-800/90 p-4 shadow-lg">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                            <div class="text-xs text-gray-300">หน่วย</div>
+                            <div class="text-lg font-bold text-white">${escapeHtml(getUnitDisplayName(item.unit))}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-300">ความคืบหน้า</div>
+                            <div class="text-xl font-bold text-gold-400">${item.percent}%</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                        <div class="border border-white/20 p-2">
+                            <div class="text-[11px] text-gray-300">ทั้งหมด</div>
+                            <div class="text-xl font-bold">${item.total}</div>
+                        </div>
+                        <div class="border border-emerald-400/40 p-2">
+                            <div class="text-[11px] text-gray-300">เสร็จสิ้น</div>
+                            <div class="text-xl font-bold text-emerald-300">${item.completed}</div>
+                        </div>
+                        <div class="border border-yellow-300/40 p-2">
+                            <div class="text-[11px] text-gray-300">คงเหลือ</div>
+                            <div class="text-xl font-bold text-yellow-300">${item.open}</div>
+                        </div>
+                    </div>
+                    <div class="h-2 bg-navy-900 border border-gold-500/30">
+                        <div class="h-full bg-gold-500" style="width:${item.percent}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openMissionSummary() {
+            renderMissionSummary();
+            el.missionSummaryModal.classList.remove('hidden');
+            el.missionSummaryModal.classList.add('flex');
+        }
+
+        function closeMissionSummary() {
+            el.missionSummaryModal.classList.add('hidden');
+            el.missionSummaryModal.classList.remove('flex');
+        }
+
         function renderDashboard() {
             el.dashboardGrid.innerHTML = '';
             const visibleUnits = units.filter(unit => dashboardVisibility[unit]);
@@ -936,15 +1050,16 @@
                     contentHtml += '<div class="text-center text-gray-400 py-10">ไม่มีข้อมูลในช่วงเวลานี้</div>';
                 } else {
                     filteredReports.forEach(report => {
-                        const status = activeStatuses().find(item => item.name === report.status);
+                        const currentStatus = getReportCurrentStatus(report);
+                        const status = activeStatuses().find(item => item.name === currentStatus);
                         const statusClass = getStatusClasses(status ? status.color : 'gray');
                         contentHtml += `
                             <div class="border-l-4 border-navy-500 pl-3 py-1 bg-gray-50 rounded-r-md">
                                 <div class="text-xs text-gray-500 mb-1"><span class="font-bold text-navy-600">${formatDate(report.date)}</span> · ${escapeHtml(report.time)} น.</div>
                                 <div class="text-sm text-gray-800 mb-2 whitespace-pre-wrap">${escapeHtml(report.details)}</div>
-                                <span class="px-2 py-0.5 inline-flex text-[11px] leading-4 font-semibold rounded ${statusClass}">${escapeHtml(report.status)}</span>
+                                <span class="px-2 py-0.5 inline-flex text-[11px] leading-4 font-semibold rounded ${statusClass}">${escapeHtml(currentStatus || '-')}</span>
                                 <div class="text-[11px] text-gray-500 mt-2">สร้าง: ${escapeHtml(formatDateTime(report.createdAt))}</div>
-                                <div class="text-[11px] text-gray-500">ผลสุดท้าย: ${escapeHtml(report.finalStatus || '-')} ${escapeHtml(formatFinalDateTime(report))}</div>
+                                <div class="text-[11px] text-gray-500">สถานะปัจจุบัน: ${escapeHtml(currentStatus || '-')} ${escapeHtml(report.finalStatus ? formatFinalDateTime(report) : '')}</div>
                             </div>
                         `;
                     });
