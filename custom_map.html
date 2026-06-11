@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Map Viewer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #2b4f65; }
+        #map { width: 100%; height: 100%; }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-family: sans-serif; font-size: 20px; z-index: 1000; text-shadow: 1px 1px 2px black; }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">กำลังโหลดแผนที่ (Loading Map...)</div>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const mapFile = urlParams.get('map') || '001pubgmap.png';
+
+        const img = new Image();
+        img.onload = function() {
+            document.getElementById('loading').style.display = 'none';
+            const w = this.width;
+            const h = this.height;
+            
+            const map = L.map('map', {
+                crs: L.CRS.Simple,
+                minZoom: -4,
+                maxZoom: 3,
+                zoomControl: false,
+                zoomSnap: 0.5,
+                wheelPxPerZoomLevel: 120
+            });
+
+            // Set coordinates so that [0,0] is bottom-left
+            const bounds = [[0, 0], [h, w]];
+            L.imageOverlay(mapFile, bounds).addTo(map);
+            
+            // Set initial view to center of the map
+            map.fitBounds(bounds);
+            
+            // Prevent panning too far away from the image
+            map.setMaxBounds([[-h*0.5, -w*0.5], [h*1.5, w*1.5]]);
+            
+            L.control.zoom({ position: 'topright' }).addTo(map);
+        };
+        img.onerror = function() {
+            document.getElementById('loading').innerText = 'ไม่สามารถโหลดไฟล์รูปภาพได้ (Failed to load map image)';
+        };
+        img.src = mapFile;
+    </script>
+</body>
+</html>
