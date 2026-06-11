@@ -1,6 +1,6 @@
 var DEFAULT_SPREADSHEET_ID = '1fHx-iquw-pGeWmHsr0szKxylxIhlFpmujU5PYqvmP0w';
 var SHEETS = {
-  reports: { name: 'Reports', headers: ['id', 'unit', 'date', 'time', 'details', 'status', 'updatedAt', 'deleted'] },
+  reports: { name: 'Reports', headers: ['id', 'unit', 'date', 'time', 'details', 'status', 'createdAt', 'updatedAt', 'finalStatus', 'finalDate', 'finalTime', 'finalNote', 'deleted'] },
   statuses: { name: 'Statuses', headers: ['id', 'name', 'color', 'updatedAt', 'deleted'] },
   config: { name: 'Config', headers: ['key', 'value', 'updatedAt'] }
 };
@@ -50,7 +50,7 @@ function ensureBook(id) {
 function applyOps(id, ops) {
   ops.forEach(function(op) {
     var p = op.payload || {};
-    if (op.type === 'upsertReport') upsert(id, SHEETS.reports, p.id, [p.id, p.unit, p.date, p.time, p.details, p.status, p.updatedAt, !!p.deleted]);
+    if (op.type === 'upsertReport') upsert(id, SHEETS.reports, p.id, [p.id, p.unit, p.date, p.time, p.details, p.status, p.createdAt || p.updatedAt, p.updatedAt, p.finalStatus || '', p.finalDate || '', p.finalTime || '', p.finalNote || '', !!p.deleted]);
     if (op.type === 'deleteReport') markDeleted(id, SHEETS.reports, p.id, p.updatedAt);
     if (op.type === 'upsertStatus') upsert(id, SHEETS.statuses, p.id, [p.id, p.name, p.color, p.updatedAt, !!p.deleted]);
     if (op.type === 'deleteStatus') markDeleted(id, SHEETS.statuses, p.id, p.updatedAt);
@@ -90,7 +90,10 @@ function loadState(id) {
   ensureBook(id);
   var ss = SpreadsheetApp.openById(id);
   var reports = rows(ss.getSheetByName('Reports'), SHEETS.reports.headers).map(function(r) {
-    return { id: str(r.id), unit: str(r.unit) || 'N1', date: dateStr(r.date), time: timeStr(r.time), details: str(r.details), status: str(r.status), updatedAt: iso(r.updatedAt), deleted: bool(r.deleted) };
+    var oldDeleted = r.updatedAt === true || r.updatedAt === false || String(r.updatedAt).toLowerCase() === 'true' || String(r.updatedAt).toLowerCase() === 'false';
+    var created = r.createdAt || r.updatedAt;
+    var updated = oldDeleted ? created : (r.updatedAt || created);
+    return { id: str(r.id), unit: str(r.unit) || 'N1', date: dateStr(r.date), time: timeStr(r.time), details: str(r.details), status: str(r.status), createdAt: iso(created), updatedAt: iso(updated), finalStatus: str(r.finalStatus), finalDate: dateStr(r.finalDate), finalTime: timeStr(r.finalTime), finalNote: str(r.finalNote), deleted: bool(r.deleted) || (oldDeleted && bool(r.updatedAt)) };
   }).filter(function(r) { return r.id; });
   var statuses = rows(ss.getSheetByName('Statuses'), SHEETS.statuses.headers).map(function(r) {
     return { id: str(r.id), name: str(r.name), color: str(r.color) || 'gray', updatedAt: iso(r.updatedAt), deleted: bool(r.deleted) };

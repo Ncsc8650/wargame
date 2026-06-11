@@ -122,7 +122,8 @@
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-medium uppercase">วัน/เวลา</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium uppercase w-1/2">สถานการณ์ปฏิบัติการ</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium uppercase">ผลสัมฤทธิ์</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase">สถานะ/ผลสุดท้าย</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase">บันทึกเวลา</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium uppercase">จัดการ</th>
                             </tr>
                         </thead>
@@ -270,9 +271,9 @@
                 { id: 'status_failed', name: 'ล้มเหลว/ยกเลิก', color: 'red', updatedAt: nowIso() }
             ],
             reports: [
-                { id: 'sample_1', unit: 'N1', date: '2026-06-09', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย', updatedAt: nowIso(), deleted: false },
-                { id: 'sample_2', unit: 'N1', date: '2026-06-10', time: '14:30', details: 'ลาดตระเวนทางทะเลตามพิกัดเป้าหมาย', status: 'อยู่ระหว่างดำเนินการ', updatedAt: nowIso(), deleted: false },
-                { id: 'sample_3', unit: 'N2', date: '2026-06-10', time: '09:00', details: 'เตรียมพร้อมเรือรบและอากาศยาน', status: 'สำเร็จตามเป้าหมาย', updatedAt: nowIso(), deleted: false }
+                { id: 'sample_1', unit: 'N1', date: '2026-06-09', time: '08:00', details: 'จัดตั้งศูนย์บัญชาการชั่วคราว พร้อมตรวจสอบระบบสื่อสาร', status: 'สำเร็จตามเป้าหมาย', createdAt: nowIso(), updatedAt: nowIso(), finalStatus: 'สำเร็จตามเป้าหมาย', finalDate: '2026-06-09', finalTime: '12:00', finalNote: '', deleted: false },
+                { id: 'sample_2', unit: 'N1', date: '2026-06-10', time: '14:30', details: 'ลาดตระเวนทางทะเลตามพิกัดเป้าหมาย', status: 'อยู่ระหว่างดำเนินการ', createdAt: nowIso(), updatedAt: nowIso(), finalStatus: '', finalDate: '', finalTime: '', finalNote: '', deleted: false },
+                { id: 'sample_3', unit: 'N2', date: '2026-06-10', time: '09:00', details: 'เตรียมพร้อมเรือรบและอากาศยาน', status: 'สำเร็จตามเป้าหมาย', createdAt: nowIso(), updatedAt: nowIso(), finalStatus: '', finalDate: '', finalTime: '', finalNote: '', deleted: false }
             ],
             meta: { updatedAt: nowIso(), lastSyncAt: '' }
         };
@@ -357,7 +358,12 @@
                     time: r.time || '',
                     details: r.details || '',
                     status: r.status || '',
-                    updatedAt: r.updatedAt || nowIso(),
+                    createdAt: r.createdAt || r.updatedAt || nowIso(),
+                    updatedAt: r.updatedAt || r.createdAt || nowIso(),
+                    finalStatus: r.finalStatus || '',
+                    finalDate: r.finalDate || '',
+                    finalTime: r.finalTime || '',
+                    finalNote: r.finalNote || '',
                     deleted: Boolean(r.deleted)
                 }));
             } else if (input.reports && typeof input.reports === 'object') {
@@ -368,7 +374,12 @@
                     time: r.time || '',
                     details: r.details || '',
                     status: r.status || '',
-                    updatedAt: r.updatedAt || nowIso(),
+                    createdAt: r.createdAt || r.updatedAt || nowIso(),
+                    updatedAt: r.updatedAt || r.createdAt || nowIso(),
+                    finalStatus: r.finalStatus || '',
+                    finalDate: r.finalDate || '',
+                    finalTime: r.finalTime || '',
+                    finalNote: r.finalNote || '',
                     deleted: Boolean(r.deleted)
                 })));
             }
@@ -802,6 +813,8 @@
                                 <div class="text-xs text-gray-500 mb-1"><span class="font-bold text-navy-600">${formatDate(report.date)}</span> · ${escapeHtml(report.time)} น.</div>
                                 <div class="text-sm text-gray-800 mb-2 whitespace-pre-wrap">${escapeHtml(report.details)}</div>
                                 <span class="px-2 py-0.5 inline-flex text-[11px] leading-4 font-semibold rounded ${statusClass}">${escapeHtml(report.status)}</span>
+                                <div class="text-[11px] text-gray-500 mt-2">สร้าง: ${escapeHtml(formatDateTime(report.createdAt))}</div>
+                                <div class="text-[11px] text-gray-500">ผลสุดท้าย: ${escapeHtml(report.finalStatus || '-')} ${escapeHtml(formatFinalDateTime(report))}</div>
                             </div>
                         `;
                     });
@@ -810,7 +823,10 @@
                 box.innerHTML = `
                     <div class="bg-navy-700 text-white px-4 py-3 rounded-t-lg flex justify-between items-center shrink-0">
                         <span class="font-bold text-lg">หน่วย ${unit}</span>
-                        <span class="bg-gold-500 text-navy-900 text-xs font-bold px-2 py-1 rounded-full">${filteredReports.length} รายการ</span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="downloadQuickUnitPdf('${unit}')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-2 py-1 rounded shadow">PDF</button>
+                            <span class="bg-gold-500 text-navy-900 text-xs font-bold px-2 py-1 rounded-full">${filteredReports.length} รายการ</span>
+                        </div>
                     </div>
                     ${contentHtml}
                 `;
@@ -856,7 +872,7 @@
             el.reportTableBody.innerHTML = '';
             const rows = activeReports(currentUnitEdit).sort(sortReportsDesc);
             if (rows.length === 0) {
-                el.reportTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-500">ไม่มีข้อมูล</td></tr>';
+                el.reportTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">ไม่มีข้อมูล</td></tr>';
                 return;
             }
             rows.forEach(report => {
@@ -870,8 +886,17 @@
                         <div class="text-xs text-gray-500">${escapeHtml(report.time)} น.</div>
                     </td>
                     <td class="px-4 py-3 text-sm text-gray-800 whitespace-pre-wrap">${escapeHtml(report.details)}</td>
-                    <td class="px-4 py-3 text-sm"><span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${statusClass}">${escapeHtml(report.status)}</span></td>
+                    <td class="px-4 py-3 text-sm">
+                        <div class="mb-1"><span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full ${statusClass}">${escapeHtml(report.status)}</span></div>
+                        <div class="text-xs text-gray-500">ผลสุดท้าย: <span class="font-semibold text-gray-800">${escapeHtml(report.finalStatus || '-')}</span></div>
+                        <div class="text-xs text-gray-500">${escapeHtml(formatFinalDateTime(report))}</div>
+                    </td>
+                    <td class="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
+                        <div>สร้าง: ${escapeHtml(formatDateTime(report.createdAt))}</div>
+                        <div>แก้ไข: ${escapeHtml(formatDateTime(report.updatedAt))}</div>
+                    </td>
                     <td class="px-4 py-3 text-center whitespace-nowrap">
+                        <button onclick="finalizeReport('${report.id}')" class="text-emerald-700 hover:text-emerald-900 font-bold text-sm bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded">สรุปผล</button>
                         <button onclick="editReport('${report.id}')" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded">แก้ไข</button>
                         <button onclick="deleteReport('${report.id}')" class="text-red-600 hover:text-red-800 font-bold text-sm bg-red-50 hover:bg-red-100 px-3 py-1 rounded ml-2">ลบ</button>
                     </td>
@@ -882,14 +907,22 @@
 
         document.getElementById('reportForm').addEventListener('submit', (event) => {
             event.preventDefault();
+            const editingId = document.getElementById('editingReportId').value;
+            const existingReport = state.reports.find(item => item.id === editingId);
+            const timestamp = nowIso();
             const report = {
-                id: document.getElementById('editingReportId').value || newId('report'),
+                id: editingId || newId('report'),
                 unit: currentUnitEdit,
                 date: document.getElementById('reportDate').value,
                 time: document.getElementById('reportTime').value,
                 details: document.getElementById('reportDetails').value.trim(),
                 status: document.getElementById('reportStatus').value,
-                updatedAt: nowIso(),
+                createdAt: existingReport ? (existingReport.createdAt || timestamp) : timestamp,
+                updatedAt: timestamp,
+                finalStatus: existingReport ? (existingReport.finalStatus || '') : '',
+                finalDate: existingReport ? (existingReport.finalDate || '') : '',
+                finalTime: existingReport ? (existingReport.finalTime || '') : '',
+                finalNote: existingReport ? (existingReport.finalNote || '') : '',
                 deleted: false
             };
             const existingIndex = state.reports.findIndex(item => item.id === report.id);
@@ -901,6 +934,32 @@
             renderEditTable();
             renderDashboard();
         });
+
+        function finalizeReport(id) {
+            const report = state.reports.find(item => item.id === id);
+            if (!report) return;
+            const statusOptions = activeStatuses().map(item => item.name).join(', ');
+            const finalStatus = prompt(`ผลสัมฤทธิ์สุดท้ายของกิจกรรมนี้คืออะไร?\nเลือก/พิมพ์จากรายการ: ${statusOptions}`, report.finalStatus || report.status || '');
+            if (finalStatus === null) return;
+            const today = new Date().toISOString().slice(0, 10);
+            const finalDate = prompt('วันที่สรุปผลสุดท้าย (YYYY-MM-DD)', report.finalDate || today);
+            if (finalDate === null) return;
+            const nowTime = new Date().toTimeString().slice(0, 5);
+            const finalTime = prompt('เวลาสรุปผลสุดท้าย (HH:MM)', report.finalTime || nowTime);
+            if (finalTime === null) return;
+            const finalNote = prompt('หมายเหตุผลการดำเนินการจริง (เว้นว่างได้)', report.finalNote || '');
+            if (finalNote === null) return;
+
+            report.finalStatus = finalStatus.trim();
+            report.finalDate = finalDate.trim();
+            report.finalTime = finalTime.trim();
+            report.finalNote = finalNote.trim();
+            report.updatedAt = nowIso();
+            saveLocalState();
+            queueOperation({ type: 'upsertReport', payload: report });
+            renderEditTable();
+            renderDashboard();
+        }
 
         function editReport(id) {
             const report = state.reports.find(item => item.id === id);
@@ -964,19 +1023,37 @@
             return new Date(`${dateStr}T00:00:00`).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric' });
         }
 
+        function formatDateTime(value) {
+            if (!value) return '-';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return String(value);
+            return date.toLocaleString('th-TH', { year: '2-digit', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatFinalDateTime(report) {
+            if (!report.finalDate && !report.finalTime) return '-';
+            return `${report.finalDate || '-'} ${report.finalTime ? report.finalTime + ' น.' : ''}`.trim();
+        }
+
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, char => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
             }[char]));
         }
 
-        function getUnitReportRows(unit = currentUnitEdit) {
-            return activeReports(unit).sort(sortReportsDesc);
+        function getUnitReportRows(unit = currentUnitEdit, filters = {}) {
+            let rows = activeReports(unit);
+            if (filters.startDate) rows = rows.filter(report => report.date >= filters.startDate);
+            if (filters.endDate) rows = rows.filter(report => report.date <= filters.endDate);
+            return rows.sort(sortReportsDesc);
         }
 
-        function buildUnitReportHtml(unit = currentUnitEdit) {
-            const rows = getUnitReportRows(unit);
+        function buildUnitReportHtml(unit = currentUnitEdit, filters = {}) {
+            const rows = getUnitReportRows(unit, filters);
             const generatedAt = new Date().toLocaleString('th-TH');
+            const rangeText = filters.startDate || filters.endDate
+                ? ` | ช่วงวันที่: ${filters.startDate || 'เริ่มต้น'} ถึง ${filters.endDate || 'ล่าสุด'}`
+                : '';
             const bodyRows = rows.length ? rows.map((report, index) => `
                 <tr>
                     <td>${index + 1}</td>
@@ -984,8 +1061,13 @@
                     <td>${escapeHtml(report.time)} น.</td>
                     <td>${escapeHtml(report.details).replace(/\n/g, '<br>')}</td>
                     <td>${escapeHtml(report.status)}</td>
+                    <td>${escapeHtml(formatDateTime(report.createdAt))}</td>
+                    <td>${escapeHtml(formatDateTime(report.updatedAt))}</td>
+                    <td>${escapeHtml(report.finalStatus || '-')}</td>
+                    <td>${escapeHtml(formatFinalDateTime(report))}</td>
+                    <td>${escapeHtml(report.finalNote || '').replace(/\n/g, '<br>')}</td>
                 </tr>
-            `).join('') : '<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
+            `).join('') : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>';
 
             return `
                 <!DOCTYPE html>
@@ -1000,14 +1082,14 @@
                         table { border-collapse: collapse; width: 100%; font-size: 13px; }
                         th { background: #102a43; color: #fff; text-align: left; }
                         th, td { border: 1px solid #cbd5e1; padding: 8px; vertical-align: top; }
-                        td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(5) { white-space: nowrap; }
+                        td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(5), td:nth-child(6), td:nth-child(7), td:nth-child(8), td:nth-child(9) { white-space: nowrap; }
                         .empty { text-align: center; color: #6b7280; padding: 18px; }
                         @media print { body { padding: 0; } button { display: none; } }
                     </style>
                 </head>
                 <body>
                     <h1>${escapeHtml(state.appConfig.mainTitle)} - หน่วย ${escapeHtml(unit)}</h1>
-                    <div class="meta">${escapeHtml(state.appConfig.subTitle)} | สร้างรายงาน: ${escapeHtml(generatedAt)}</div>
+                    <div class="meta">${escapeHtml(state.appConfig.subTitle)} | สร้างรายงาน: ${escapeHtml(generatedAt)}${escapeHtml(rangeText)}</div>
                     <table>
                         <thead>
                             <tr>
@@ -1015,7 +1097,12 @@
                                 <th>วันที่</th>
                                 <th>เวลา</th>
                                 <th>สถานการณ์ปฏิบัติการ</th>
-                                <th>ผลสัมฤทธิ์</th>
+                                <th>สถานะขณะบันทึก</th>
+                                <th>เวลาสร้างกิจกรรม</th>
+                                <th>เวลาแก้ไขล่าสุด</th>
+                                <th>ผลสัมฤทธิ์สุดท้าย</th>
+                                <th>วันที่/เวลาสรุปผล</th>
+                                <th>หมายเหตุผลจริง</th>
                             </tr>
                         </thead>
                         <tbody>${bodyRows}</tbody>
@@ -1037,14 +1124,24 @@
         }
 
         function downloadUnitPdf() {
-            const unit = currentUnitEdit;
+            openUnitPdf(currentUnitEdit);
+        }
+
+        function downloadQuickUnitPdf(unit) {
+            openUnitPdf(unit, {
+                startDate: document.getElementById('dashboardStartDate').value,
+                endDate: document.getElementById('dashboardEndDate').value
+            });
+        }
+
+        function openUnitPdf(unit, filters = {}) {
             const reportWindow = window.open('', '_blank');
             if (!reportWindow) {
                 alert('กรุณาอนุญาต pop-up เพื่อสร้างรายงาน PDF');
                 return;
             }
             reportWindow.document.open();
-            reportWindow.document.write(buildUnitReportHtml(unit));
+            reportWindow.document.write(buildUnitReportHtml(unit, filters));
             reportWindow.document.close();
             reportWindow.focus();
             setTimeout(() => reportWindow.print(), 300);
