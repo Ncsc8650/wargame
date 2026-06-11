@@ -60,6 +60,7 @@ function applyOps(id, ops) {
     if (op.type === 'saveConfig') {
       var t = new Date().toISOString();
       upsert(id, SHEETS.config, 'mainTitle', ['mainTitle', p.mainTitle || '', t]);
+      upsert(id, SHEETS.config, 'titleTag', ['titleTag', p.titleTag || p.mainTitle || '', t]);
       upsert(id, SHEETS.config, 'subTitle', ['subTitle', p.subTitle || '', t]);
       upsert(id, SHEETS.config, 'footerText', ['footerText', p.footerText || '', t]);
     }
@@ -106,7 +107,7 @@ function loadState(id) {
     return { unit: str(r.unit), name: str(r.name), updatedAt: iso(r.updatedAt), deleted: bool(r.deleted) };
   }).filter(function(r) { return r.unit; });
   var cfg = rows(ss.getSheetByName('Config'), SHEETS.config.headers);
-  return { appConfig: { mainTitle: cfgVal(cfg, 'mainTitle') || 'ระบบรายงานสถานการณ์ Wargame', subTitle: cfgVal(cfg, 'subTitle') || 'โรงเรียนเสนาธิการทหารเรือ', footerText: cfgVal(cfg, 'footerText') || 'เชื่อมต่อ Google Sheets พร้อมระบบสำรองข้อมูลในเครื่อง' }, activityStatuses: statuses, unitLabels: unitLabels, reports: reports, meta: { updatedAt: new Date().toISOString(), lastSyncAt: new Date().toISOString() } };
+  return { appConfig: { mainTitle: cfgVal(cfg, 'mainTitle') || 'ระบบรายงานสถานการณ์ Wargame', titleTag: cfgVal(cfg, 'titleTag') || cfgVal(cfg, 'mainTitle') || 'ระบบรายงานสถานการณ์ Wargame', subTitle: cfgVal(cfg, 'subTitle') || 'โรงเรียนเสนาธิการทหารเรือ', footerText: cfgVal(cfg, 'footerText') || 'เชื่อมต่อ Google Sheets พร้อมระบบสำรองข้อมูลในเครื่อง' }, activityStatuses: statuses, unitLabels: unitLabels, reports: reports, meta: { updatedAt: new Date().toISOString(), lastSyncAt: new Date().toISOString() } };
 }
 
 function rows(sh, headers) {
