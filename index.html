@@ -375,7 +375,7 @@
         const SETTINGS_KEY = 'wargame_settings_v3';
         const SPREADSHEET_ID = '1fHx-iquw-pGeWmHsr0szKxylxIhlFpmujU5PYqvmP0w';
         const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzMTDlYdpqXduJNrPCtH_KCI0NLuVSrmOwjKuQTUMgkD-ceN_EjplhgtCfg5dGj2dcOUg/exec';
-        const APP_VERSION = '3.3';
+        const APP_VERSION = '3.4';
         const CONNECTION_CONFIRM_CODE = 'ncsc86';
         const units = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7'];
 
@@ -511,7 +511,7 @@
             switchView('dashboard');
             window.addEventListener('online', () => syncNow());
             if (settings.apiUrl) {
-                syncNow({ quiet: true });
+                loadFromSheets({ quiet: true, replace: true });
             }
             guardLineBrowser();
         }
@@ -631,10 +631,7 @@
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
             document.getElementById('connectionConfirmCode').value = '';
             updateSyncUi();
-            if (settings.apiUrl && getPendingQueue().length === 0) {
-                queueOperations(snapshotOperations());
-            }
-            if (settings.apiUrl) syncNow();
+            if (settings.apiUrl) loadFromSheets({ replace: true });
         }
 
         function getPendingQueue() {
@@ -752,24 +749,19 @@
                 updateSyncUi();
                 return;
             }
-            let queue = getPendingQueue();
+            const queue = getPendingQueue();
             if (queue.length === 0) {
-                queueOperations(snapshotOperations());
-                queue = getPendingQueue();
-                if (queue.length === 0) {
-                    if (!options.quiet) setSyncMessage('ไม่มีข้อมูลค้างส่ง', 'success');
-                    updateSyncUi();
-                    return;
-                }
+                await loadFromSheets({ quiet: options.quiet, replace: true });
+                return;
             }
             syncInFlight = true;
             setSyncMessage('กำลังซิงก์ข้อมูลไปยัง Google Sheets...');
             try {
                 await sheetsPost({ action: 'sync', operations: queue, clientState: state });
                 setPendingQueue([]);
-                state.meta.lastSyncAt = nowIso();
-                saveLocalState();
-                setSyncMessage('ส่งข้อมูลไปยัง Google Sheets แล้ว หาก Apps Script เปิดสิทธิ์ถูกต้องข้อมูลจะเข้าชีต', 'success');
+                await new Promise(resolve => setTimeout(resolve, 900));
+                await loadFromSheets({ quiet: true, replace: true });
+                setSyncMessage('ส่งข้อมูลไปยัง Google Sheets แล้ว และโหลดข้อมูลปัจจุบันกลับมาแสดง', 'success');
             } catch (error) {
                 console.error(error);
                 if (!options.quiet) setSyncMessage(`ซิงก์ไม่สำเร็จ: ${error.message}`, 'error');
@@ -778,24 +770,26 @@
                 updateSyncUi();
             }
         }
-
-        async function loadFromSheets() {
+        async function loadFromSheets(options = {}) {
             if (!settings.apiUrl) {
                 setSyncMessage('กรุณาใส่ Apps Script Web App URL ก่อนโหลดข้อมูล', 'error');
                 switchView('settings');
                 return;
             }
-            setSyncMessage('กำลังโหลดข้อมูลจาก Google Sheets...');
+            if (!options.quiet) setSyncMessage('กำลังโหลดข้อมูลปัจจุบันจาก Google Sheets...');
             try {
                 const json = await sheetsLoadJsonp();
-                state = mergeStates(state, normalizeState(json.state));
+                const remoteState = normalizeState(json.state);
+                const shouldReplace = options.replace !== false;
+                state = shouldReplace ? remoteState : mergeStates(state, remoteState);
                 state.meta.lastSyncAt = nowIso();
                 saveLocalState();
+                if (shouldReplace && options.clearQueue !== false) setPendingQueue([]);
                 renderAll();
-                setSyncMessage('โหลดข้อมูลจาก Google Sheets สำเร็จ', 'success');
+                if (!options.quiet) setSyncMessage('โหลดข้อมูลปัจจุบันจาก Google Sheets สำเร็จ', 'success');
             } catch (error) {
                 console.error(error);
-                setSyncMessage(`โหลดข้อมูลไม่สำเร็จ: ${error.message}`, 'error');
+                if (!options.quiet) setSyncMessage(`โหลดข้อมูลไม่สำเร็จ: ${error.message}`, 'error');
             }
         }
 
