@@ -19,8 +19,6 @@
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f0f4f8; }
         .tab-active { border-bottom: 4px solid #ecc94b; color: #ecc94b; font-weight: bold; }
@@ -220,7 +218,7 @@
 
         <!-- ================= MAP VIEW ================= -->
         <div id="viewMap" class="flex-col hidden grow bg-navy-800 rounded-lg overflow-hidden border-2 border-gold-500 min-h-[600px] relative">
-            <div id="leafletMap" class="absolute inset-0"></div>
+            <iframe id="mapIframe" src="https://pubgmap.io/erangel.html?/v2/30/4ftla8/BLeG" class="absolute inset-0 w-full h-full border-0"></iframe>
             <!-- Fullscreen Button -->
             <button onclick="toggleFullscreen()" class="absolute top-4 right-4 z-[1000] bg-navy-900/80 hover:bg-gold-500 text-white hover:text-navy-900 border border-gold-500 p-2 rounded shadow-lg transition-colors flex items-center justify-center" title="เต็มจอ">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -301,7 +299,6 @@
             renderEditTabs();
             renderEditTable();
             renderStatusTable();
-            initMap();
             switchView('dashboard');
         }
 
@@ -338,9 +335,6 @@
             } else if (viewName === 'map') {
                 viewMap.classList.remove('hidden'); viewMap.classList.add('flex');
                 btnNavMap.className = "bg-gold-500 text-navy-900 px-4 py-2 rounded font-bold transition-colors";
-                if(leafletMapInstance) {
-                    setTimeout(() => leafletMapInstance.invalidateSize(), 100);
-                }
             }
         }
 
@@ -680,43 +674,6 @@
 
         function formatDate(dateStr) {
             return new Date(dateStr).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric' });
-        }
-
-        let leafletMapInstance = null;
-        function initMap() {
-            leafletMapInstance = L.map('leafletMap', {
-                crs: L.CRS.Simple,
-                minZoom: 2,
-                maxZoom: 6
-            });
-
-            // Base maps
-            var erangelNormal = L.tileLayer('https://tiles{s}-v2.pubgmap.net/tiles/erangel/{z}/{x}/{y}.png', {
-                subdomains: ['0', '1', '2', '3'],
-                noWrap: true,
-                bounds: [[0, 0], [-256, 256]],
-                attribution: 'Map data &copy; Krafton / Tiles from pubgmap.io'
-            });
-
-            // Topographical / Elevation Map
-            var erangelElevation = L.tileLayer('https://tiles{s}-v2.pubgmap.net/tiles/erangel_topographic/{z}/{x}/{y}.png', {
-                subdomains: ['0', '1', '2', '3'],
-                noWrap: true,
-                bounds: [[0, 0], [-256, 256]],
-                attribution: 'Map data &copy; Krafton / Elevation by pubgmap.io'
-            });
-
-            // Add default layer
-            erangelNormal.addTo(leafletMapInstance);
-
-            // Layer Control (Switcher)
-            var baseMaps = {
-                "แผนที่ปกติ (Normal)": erangelNormal,
-                "ระดับความสูง (Topographic)": erangelElevation
-            };
-            L.control.layers(baseMaps).addTo(leafletMapInstance);
-
-            leafletMapInstance.setView([-128, 128], 3);
         }
 
         // Fullscreen Toggle Function
