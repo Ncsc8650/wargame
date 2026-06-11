@@ -30,6 +30,38 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .loader-track {
+            background: linear-gradient(180deg, #0b1f33 0%, #061323 100%);
+            box-shadow: inset 0 8px 18px rgba(255,255,255,0.06), inset 0 -10px 20px rgba(0,0,0,0.55), 0 20px 60px rgba(0,0,0,0.45);
+            perspective: 900px;
+        }
+        .loader-rail {
+            background: linear-gradient(90deg, rgba(236,201,75,0.1), rgba(236,201,75,0.35), rgba(236,201,75,0.1));
+            box-shadow: inset 0 2px 8px rgba(255,255,255,0.12), inset 0 -4px 14px rgba(0,0,0,0.65);
+        }
+        .loader-fill {
+            background: linear-gradient(90deg, #f6e05e 0%, #ecc94b 55%, #f97316 100%);
+            box-shadow: 0 0 22px rgba(236,201,75,0.65);
+        }
+        .loader-bullet {
+            transform: translate(-50%, -50%) rotateX(18deg);
+            filter: drop-shadow(0 12px 16px rgba(0,0,0,0.55));
+        }
+        .loader-bullet-body {
+            background: linear-gradient(90deg, #7c2d12 0%, #f59e0b 18%, #f6e05e 45%, #f59e0b 72%, #78350f 100%);
+            box-shadow: inset 0 5px 10px rgba(255,255,255,0.32), inset 0 -8px 12px rgba(120,53,15,0.65), 0 0 26px rgba(246,224,94,0.45);
+        }
+        .loader-bullet-tip {
+            background: linear-gradient(90deg, #f6e05e, #b45309);
+        }
+        .loader-spark {
+            background: radial-gradient(circle, rgba(255,255,255,0.95), rgba(246,224,94,0.6), rgba(249,115,22,0));
+            animation: sparkPulse 0.7s ease-in-out infinite alternate;
+        }
+        @keyframes sparkPulse {
+            from { opacity: 0.35; transform: scaleX(0.65); }
+            to { opacity: 0.95; transform: scaleX(1); }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-navy-900">
@@ -342,6 +374,32 @@
         </div>
     </div>
 
+    <div id="serverLoadOverlay" class="fixed inset-0 z-[70] hidden items-center justify-center bg-navy-900/95 px-4">
+        <div class="loader-track w-full max-w-3xl border-2 border-gold-500 text-white p-5 sm:p-7">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+                <div>
+                    <p class="text-xs text-gold-400 font-bold tracking-[0.24em] uppercase">Live Sheets Download</p>
+                    <h3 class="text-2xl sm:text-3xl font-bold">กำลังดาวน์โหลดฐานข้อมูลจาก Google Sheets</h3>
+                    <p id="serverLoadText" class="text-sm text-gray-300 mt-2">กำลังเชื่อมต่อเซิร์ฟเวอร์...</p>
+                </div>
+                <div id="serverLoadPercent" class="text-5xl font-black text-gold-400 leading-none tabular-nums">0%</div>
+            </div>
+            <div class="relative h-24 sm:h-28">
+                <div class="loader-rail absolute left-0 right-0 top-1/2 h-8 -translate-y-1/2 border border-gold-500/40"></div>
+                <div id="serverLoadFill" class="loader-fill absolute left-0 top-1/2 h-3 -translate-y-1/2 w-0"></div>
+                <div id="serverLoadBullet" class="loader-bullet absolute left-0 top-1/2 w-28 h-12">
+                    <div class="loader-spark absolute -left-8 top-1/2 h-9 w-12 -translate-y-1/2 rounded-full"></div>
+                    <div class="loader-bullet-body absolute left-0 top-1/2 h-8 w-20 -translate-y-1/2 rounded-l-md"></div>
+                    <div class="loader-bullet-tip absolute left-16 top-1/2 h-8 w-12 -translate-y-1/2 rounded-r-full [clip-path:polygon(0_0,100%_50%,0_100%)]"></div>
+                    <div class="absolute left-3 top-2 h-2 w-14 rounded-full bg-white/35"></div>
+                </div>
+            </div>
+            <div class="mt-4 grid grid-cols-5 gap-2 text-[11px] text-gray-400 font-bold tabular-nums">
+                <span>0</span><span class="text-center">25</span><span class="text-center">50</span><span class="text-center">75</span><span class="text-right">100</span>
+            </div>
+        </div>
+    </div>
+
     <div id="lineBrowserGuard" class="fixed inset-0 z-[60] hidden items-center justify-center bg-navy-900/90 px-4">
         <div class="w-full max-w-xl bg-white border-2 border-gold-500 shadow-2xl">
             <div class="bg-navy-800 text-white px-5 py-4 border-b-2 border-gold-500">
@@ -373,7 +431,7 @@
         const SETTINGS_KEY = 'wargame_settings_v3';
         const SPREADSHEET_ID = '1fHx-iquw-pGeWmHsr0szKxylxIhlFpmujU5PYqvmP0w';
         const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzMTDlYdpqXduJNrPCtH_KCI0NLuVSrmOwjKuQTUMgkD-ceN_EjplhgtCfg5dGj2dcOUg/exec';
-        const APP_VERSION = '3.5';
+        const APP_VERSION = '3.6';
         const CONNECTION_CONFIRM_CODE = 'ncsc86';
         const units = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7'];
 
@@ -402,6 +460,11 @@
         let currentView = 'dashboard';
         let dashboardVisibility = { N1:true, N2:true, N3:true, N4:true, N5:true, N6:true, N7:true };
         let syncInFlight = false;
+        let dataLoadInFlight = false;
+        let dataLoadedFromSheets = false;
+        let shouldOpenSummaryAfterLoad = false;
+        let loadProgress = 0;
+        let loadProgressTimer = null;
         const pendingOperations = [];
 
         const el = {};
@@ -518,7 +581,8 @@
                 'reportTableBody', 'formTitle', 'btnSubmitForm', 'btnCancelEdit', 'reportStatus', 'statusTableBody', 'btnSubmitStatus',
                 'btnCancelStatusEdit', 'unitLabelsTableBody', 'finalizeModal', 'finalizeReportId', 'finalStatusSelect', 'finalDateInput',
                 'finalTimeInput', 'finalNoteInput', 'missionSummaryModal', 'missionSummaryGrid', 'missionTotalAll', 'missionDoneAll',
-                'missionOpenAll', 'syncBadge', 'lastSyncText', 'syncMessage', 'pendingSummary'
+                'missionOpenAll', 'serverLoadOverlay', 'serverLoadPercent', 'serverLoadFill', 'serverLoadBullet', 'serverLoadText',
+                'syncBadge', 'lastSyncText', 'syncMessage', 'pendingSummary'
             ].forEach(id => el[id] = document.getElementById(id));
         }
 
@@ -662,6 +726,34 @@
             el.syncMessage.className = `text-sm mt-1 ${type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-700' : 'text-gray-500'}`;
         }
 
+        function updateServerLoadProgress(value, message) {
+            loadProgress = Math.max(0, Math.min(100, Math.round(value)));
+            if (el.serverLoadPercent) el.serverLoadPercent.textContent = `${loadProgress}%`;
+            if (el.serverLoadFill) el.serverLoadFill.style.width = `${loadProgress}%`;
+            if (el.serverLoadBullet) el.serverLoadBullet.style.left = `${loadProgress}%`;
+            if (message && el.serverLoadText) el.serverLoadText.textContent = message;
+        }
+
+        function showServerLoader(message = 'กำลังเชื่อมต่อเซิร์ฟเวอร์...') {
+            window.clearInterval(loadProgressTimer);
+            updateServerLoadProgress(0, message);
+            el.serverLoadOverlay.classList.remove('hidden');
+            el.serverLoadOverlay.classList.add('flex');
+            loadProgressTimer = window.setInterval(() => {
+                const next = loadProgress < 55 ? loadProgress + 5 : loadProgress < 86 ? loadProgress + 2 : loadProgress + 1;
+                updateServerLoadProgress(Math.min(next, 94));
+            }, 140);
+        }
+
+        function hideServerLoader(success = true) {
+            window.clearInterval(loadProgressTimer);
+            updateServerLoadProgress(success ? 100 : loadProgress, success ? 'ดาวน์โหลดข้อมูลครบถ้วนแล้ว' : 'โหลดข้อมูลไม่สำเร็จ');
+            window.setTimeout(() => {
+                el.serverLoadOverlay.classList.add('hidden');
+                el.serverLoadOverlay.classList.remove('flex');
+            }, success ? 450 : 900);
+        }
+
         function updateSyncUi() {
             const pending = getPendingQueue().length;
             const connected = Boolean(settings.apiUrl);
@@ -759,14 +851,19 @@
             }
         }
         async function loadFromSheets(options = {}) {
+            if (dataLoadInFlight) return;
             if (!settings.apiUrl) {
                 setSyncMessage('กรุณาใส่ Apps Script Web App URL ก่อนโหลดข้อมูล', 'error');
                 switchView('settings');
                 return;
             }
+            dataLoadInFlight = true;
+            const useLoader = options.loader !== false;
+            if (useLoader) showServerLoader('กำลังดาวน์โหลดข้อมูลจาก Google Sheets...');
             if (!options.quiet) setSyncMessage('กำลังโหลดข้อมูลปัจจุบันจาก Google Sheets...');
             try {
                 const json = await sheetsLoadJsonp();
+                if (useLoader) updateServerLoadProgress(96, 'ตรวจสอบความครบถ้วนของข้อมูล...');
                 const remoteState = normalizeState(json.state);
                 const shouldReplace = options.replace !== false;
                 state = shouldReplace ? remoteState : mergeStates(state, remoteState);
@@ -774,10 +871,19 @@
                 saveLocalState();
                 if (shouldReplace && options.clearQueue !== false) setPendingQueue([]);
                 renderAll();
+                dataLoadedFromSheets = true;
+                if (useLoader) hideServerLoader(true);
                 if (!options.quiet) setSyncMessage('โหลดข้อมูลปัจจุบันจาก Google Sheets สำเร็จ', 'success');
+                if (shouldOpenSummaryAfterLoad && currentView === 'dashboard') {
+                    shouldOpenSummaryAfterLoad = false;
+                    window.setTimeout(openMissionSummary, useLoader ? 520 : 0);
+                }
             } catch (error) {
                 console.error(error);
+                if (useLoader) hideServerLoader(false);
                 if (!options.quiet) setSyncMessage(`โหลดข้อมูลไม่สำเร็จ: ${error.message}`, 'error');
+            } finally {
+                dataLoadInFlight = false;
             }
         }
 
@@ -865,7 +971,8 @@
                 el.viewDashboard.classList.add('flex');
                 el.btnNavDashboard.className = activeClass;
                 renderDashboard();
-                openMissionSummary();
+                if (dataLoadedFromSheets) openMissionSummary();
+                else shouldOpenSummaryAfterLoad = true;
             } else if (viewName === 'edit') {
                 el.viewEdit.classList.remove('hidden');
                 el.viewEdit.classList.add('flex');
@@ -1113,6 +1220,11 @@
         }
 
         function openMissionSummary() {
+            if (!dataLoadedFromSheets) {
+                shouldOpenSummaryAfterLoad = true;
+                if (settings.apiUrl && !syncInFlight && !dataLoadInFlight) loadFromSheets({ quiet: true, replace: true });
+                return;
+            }
             renderMissionSummary();
             el.missionSummaryModal.classList.remove('hidden');
             el.missionSummaryModal.classList.add('flex');
