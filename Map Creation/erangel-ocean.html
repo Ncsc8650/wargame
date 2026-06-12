@@ -191,7 +191,8 @@ let renderer, scene, camera, controls, water, sky, sun, model;
 let pmrem, sceneEnv, envRT;          // สำหรับสร้าง environment map จากท้องฟ้า
 let modelSizeY = 100;
 const TARGET = 1500;
-const TERRAIN_HEIGHT_MULTIPLIER = 2.0;
+const TERRAIN_HEIGHT_MULTIPLIER = 1.0;
+const ERANGEL_MODEL_URL = 'erangel-height2x.glb';
 
 // ---- ระบบวางกำลังทางทหาร ----
 let terrainMeshes = [];              // mesh ของเกาะ ไว้ raycast หาจุดวาง
@@ -724,7 +725,7 @@ function setupUnits(){
 
 init();
 setupUnits();
-fetch('erangel.glb').then(r=>{ if(r.ok) return r.arrayBuffer(); }).then(b=>{ if(b) loadFromBuffer(b); }).catch(()=>{});
+fetch(ERANGEL_MODEL_URL).then(r=>{ if(r.ok) return r.arrayBuffer(); }).then(b=>{ if(b) loadFromBuffer(b); }).catch(()=>{});
 </script>
 </body>
 </html>
