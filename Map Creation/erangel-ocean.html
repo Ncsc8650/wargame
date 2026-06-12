@@ -193,6 +193,7 @@ let modelSizeY = 100;
 const TARGET = 1500;
 const TERRAIN_HEIGHT_MULTIPLIER = 1.0;
 const ERANGEL_MODEL_URL = 'erangel-height2x.glb';
+let webglContextLost = false;
 
 // ---- ระบบวางกำลังทางทหาร ----
 let terrainMeshes = [];              // mesh ของเกาะ ไว้ raycast หาจุดวาง
@@ -205,11 +206,25 @@ const ray = new THREE.Raycaster();
 function init(){
   scene = new THREE.Scene();
 
-  renderer = new THREE.WebGLRenderer({ antialias:true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer = new THREE.WebGLRenderer({
+    antialias:false,
+    powerPreference:'high-performance',
+    preserveDrawingBuffer:false,
+    failIfMajorPerformanceCaveat:false
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.42;
   viewer.appendChild(renderer.domElement);
+  renderer.domElement.addEventListener('webglcontextlost', e=>{
+    e.preventDefault();
+    webglContextLost = true;
+    loadEl.style.display = 'flex';
+    loadEl.textContent = 'กำลังรีเซ็ตภาพ 3D...';
+  }, false);
+  renderer.domElement.addEventListener('webglcontextrestored', ()=>{
+    location.reload();
+  }, false);
 
   pmrem = new THREE.PMREMGenerator(renderer);
   sceneEnv = new THREE.Scene();
@@ -294,6 +309,7 @@ function resize(){
 
 function animate(){
   requestAnimationFrame(animate);
+  if(webglContextLost) return;
   if(water.userData.normals){ water.userData.normals.offset.x += 0.0004; water.userData.normals.offset.y += 0.0002; }
   for(const u of units){ if(u.userData.rotor) u.userData.rotor.rotation.y += 0.35; }
   controls.update();
