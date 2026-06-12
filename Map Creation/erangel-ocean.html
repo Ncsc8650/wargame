@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Erangel — ภูมิประเทศ 3 มิติ + มหาสมุทร</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#d4a017; --accent2:#3b6e3b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:"Segoe UI","Sarabun","Tahoma",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.6;
+    min-height:100vh;display:flex;flex-direction:column;
+  }
+  header{
+    background:linear-gradient(135deg,#1a2230 0%,#0d1117 100%);
+    border-bottom:3px solid var(--accent);padding:18px 28px;
+  }
+  header h1{font-size:1.5rem;letter-spacing:.5px;}
+  header h1 .tag{color:var(--accent);}
+  header p{color:var(--muted);font-size:.9rem;margin-top:2px;}
+  main{flex:1;display:flex;flex-direction:column;gap:16px;padding:18px 28px;max-width:1500px;margin:0 auto;width:100%;}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .controls button{
+    background:var(--accent2);color:#fff;border:none;padding:8px 14px;
+    border-radius:8px;cursor:pointer;font-size:.85rem;transition:.2s;
+  }
+  .controls button:hover{filter:brightness(1.2);}
+  .controls button.alt{background:#2a3340;}
+  .controls .lbl{font-size:.82rem;color:var(--muted);align-self:center;font-weight:600;}
+  .controls .udiv{width:1px;height:26px;background:var(--border);margin:0 4px;}
+  .controls .uBtn{background:#2a3340;}
+  .controls .sideBtn[data-side=blue]{background:#2e6fdb;}
+  .controls .sideBtn[data-side=red]{background:#d63b3b;}
+  .controls .uBtn.active,.controls .sideBtn.active{outline:2px solid var(--accent);outline-offset:1px;box-shadow:0 0 8px rgba(212,160,23,.5);}
+  .ctrl{
+    display:flex;align-items:center;gap:6px;background:var(--panel);
+    border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.82rem;
+  }
+  .ctrl input[type=color]{width:30px;height:24px;border:none;background:none;cursor:pointer;padding:0;}
+  .ctrl input[type=range]{width:120px;accent-color:var(--accent);}
+  .viewer{
+    position:relative;width:100%;aspect-ratio:16/9;
+    background:#0b1c2a;border:1px solid var(--border);border-radius:12px;
+    overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5);
+  }
+  .viewer canvas{display:block;width:100%;height:100%;}
+  #drop{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;text-align:center;
+    background:rgba(11,28,42,.92);color:var(--text);padding:24px;z-index:5;transition:.2s;
+  }
+  #drop.hide{display:none;}
+  #drop.dragover{background:rgba(59,110,59,.35);outline:3px dashed var(--accent);outline-offset:-16px;}
+  #drop .big{font-size:2.4rem;}
+  #drop h3{font-size:1.15rem;}
+  #drop p{color:var(--muted);font-size:.9rem;max-width:480px;}
+  #drop label{
+    background:var(--accent);color:#1a1a1a;font-weight:600;padding:10px 18px;
+    border-radius:8px;cursor:pointer;font-size:.9rem;
+  }
+  #loading{
+    position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(11,28,42,.85);color:var(--accent);font-size:1.1rem;z-index:6;
+  }
+  .info-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px 22px;}
+  .card h2{font-size:1.05rem;color:var(--accent);margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+  .card ul{list-style:none;}
+  .card li{padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:12px;font-size:.9rem;}
+  .card li span:first-child{color:var(--muted);}
+  .hint{font-size:.85rem;color:var(--muted);background:rgba(212,160,23,.08);border-left:3px solid var(--accent);padding:8px 12px;border-radius:6px;}
+  footer{text-align:center;color:var(--muted);font-size:.8rem;padding:14px;border-top:1px solid var(--border);}
+  @media(max-width:850px){.info-grid{grid-template-columns:1fr;}header,main{padding-left:14px;padding-right:14px;}}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Erangel <span class="tag">— ภูมิประเทศ 3 มิติ</span></h1>
+    <p>สร้างฉากเองด้วย three.js • มหาสมุทรกว้างไร้ขอบ • ล็อกกล้องไม่ให้มุดใต้ผิวน้ำ • สำหรับสัมมนาการวางแผนทางทหาร</p>
+  </header>
+
+  <main>
+    <div class="controls">
+      <button onclick="App.frame()">🎯 จัดมุมเริ่มต้น</button>
+      <button onclick="App.top()">🗺️ มองจากด้านบน</button>
+      <button class="alt" onclick="App.fs()">⛶ เต็มจอ</button>
+      <label class="ctrl" style="cursor:pointer;">📂 เปลี่ยนไฟล์โมเดล
+        <input type="file" id="fileTop" accept=".glb,.gltf" style="display:none;">
+      </label>
+      <div class="ctrl">☀️ แสง/ท้องฟ้า <input type="range" id="sunEl" min="1" max="60" value="28"></div>
+    </div>
+
+    <div class="controls" id="unitBar">
+      <span class="lbl">วางกำลัง 3D:</span>
+      <button class="sideBtn active" data-side="blue">🔵 ฝ่ายเรา</button>
+      <button class="sideBtn" data-side="red">🔴 ข้าศึก</button>
+      <span class="udiv"></span>
+      <button class="uBtn" data-unit="infantry">🪖 ทหาร</button>
+      <button class="uBtn" data-unit="tank">🛡️ รถถัง</button>
+      <button class="uBtn" data-unit="artillery">💥 ปืนใหญ่</button>
+      <button class="uBtn" data-unit="truck">🚚 รถลำเลียง</button>
+      <button class="uBtn" data-unit="heli">🚁 ฮ.</button>
+      <button class="uBtn" data-unit="ship">🚢 เรือยกพล</button>
+      <button class="uBtn" data-unit="jet">✈️ เครื่องบินรบ</button>
+      <button class="uBtn" data-unit="hq">🚩 บก.</button>
+      <span class="udiv"></span>
+      <button class="uBtn active" id="navMode">✋ เลื่อนมุมมอง</button>
+      <button id="rotL" title="หมุนซ้าย (Q)">⟲</button>
+      <button id="rotR" title="หมุนขวา (E)">⟳</button>
+      <button id="delUnit">🗑️ ลบ</button>
+      <button id="clearUnits">🧹 ล้าง</button>
+      <span class="udiv"></span>
+      <button class="alt" id="saveBtn">💾 บันทึก</button>
+      <button class="alt" id="loadBtn">📂 โหลด</button>
+      <input type="file" id="loadFile" accept=".json,application/json" style="display:none;">
+      <div class="ctrl">📏 ขนาด <input type="range" id="unitScale" min="20" max="120" value="45"></div>
+    </div>
+
+    <div class="viewer" id="viewer">
+      <div id="drop">
+        <div class="big">🗺️🌊</div>
+        <h3>ลากไฟล์โมเดล .glb / .gltf มาวางที่นี่</h3>
+        <p>ดาวน์โหลดโมเดล Erangel จาก Sketchfab (รูปแบบ glTF/GLB) แล้วลากมาวาง หรือกดปุ่มด้านล่างเพื่อเลือกไฟล์ — ระบบจะวางบนมหาสมุทรให้อัตโนมัติ</p>
+        <label for="fileMain">เลือกไฟล์โมเดล</label>
+        <input type="file" id="fileMain" accept=".glb,.gltf" style="display:none;">
+      </div>
+      <div id="loading">⏳ กำลังโหลดโมเดล…</div>
+    </div>
+
+    <p class="hint">
+      🎖️ <b>วางกำลัง:</b> เลือกฝ่าย → เลือกชนิดหน่วย → <b>คลิกบนแผนที่</b>เพื่อวาง • <b>ลากหน่วย</b>เพื่อย้าย • คลิกเลือกแล้ว <b>⟲ ⟳ / Q E</b> เพื่อหมุนหันทิศ • <b>Del</b> เพื่อลบ • "✋ เลื่อนมุมมอง" กลับไปหมุนกล้อง &nbsp;•&nbsp;
+      🚢 เรือยกพล/✈️ เครื่องบิน วางบนน้ำ/ลอยฟ้าอัตโนมัติ &nbsp;•&nbsp; 🔒 กล้องไม่มุดใต้น้ำ
+    </p>
+
+    <div class="info-grid">
+      <div class="card">
+        <h2>รายละเอียด</h2>
+        <p>
+          <b>Erangel</b> แผนที่ขนาด 8×8 กม. ของ <i>PUBG</i> — เมืองท่า สนามบินทหาร พื้นที่เกษตร เนินเขา และเกาะทหาร
+          เหมาะใช้เป็นพื้นที่สมมติฝึกวางแผนทางทหาร กำหนดแนวรุก/แนวตั้งรับ และแบ่งพื้นที่ปฏิบัติการ
+        </p>
+        <br>
+        <p style="color:var(--muted);font-size:.86rem;">
+          ภูมิประเทศสำคัญ: Pochinki (ใจกลาง), Military Base (เกาะใต้), Georgopol (ท่าตะวันตก),
+          Mylta Power (ตะวันออก), School/Sosnovka (พื้นที่ปะทะ)
+        </p>
+      </div>
+      <div class="card">
+        <h2>เทคนิค</h2>
+        <ul>
+          <li><span>เอนจิน</span><span>three.js (WebGL)</span></li>
+          <li><span>มหาสมุทร</span><span>Water + Sky</span></li>
+          <li><span>ขอบทะเล</span><span>ไร้ขอบ (100k หน่วย)</span></li>
+          <li><span>ล็อกกล้อง</span><span>ผิวน้ำ (≈89°)</span></li>
+          <li><span>วางกำลัง</span><span>8 ชนิด × 2 ฝ่าย • หมุนได้</span></li>
+          <li><span>โหลดโมเดล</span><span>GLB/glTF (+Draco)</span></li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    ฉาก 3 มิติสร้างด้วย three.js • ลิขสิทธิ์โมเดลภูมิประเทศเป็นของผู้สร้างต้นฉบับบน Sketchfab • จัดทำเพื่อสัมมนาการวางแผนทางทหาร
+  </footer>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { Water } from 'three/addons/objects/Water.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+
+const viewer  = document.getElementById('viewer');
+const dropEl  = document.getElementById('drop');
+const loadEl  = document.getElementById('loading');
+
+let renderer, scene, camera, controls, water, sky, sun, model;
+let pmrem, sceneEnv, envRT;          // สำหรับสร้าง environment map จากท้องฟ้า
+let modelSizeY = 100;
+const TARGET = 1500;
+
+// ---- ระบบวางกำลังทางทหาร ----
+let terrainMeshes = [];              // mesh ของเกาะ ไว้ raycast หาจุดวาง
+let selRing = null, selUnit = null;  // ห่วงไฮไลต์ + หน่วยที่เลือก
+let placeType = null, unitSide = 'blue';
+let isDragging = false, downX = 0, downY = 0, movedFar = false;
+const units = [];
+const ray = new THREE.Raycaster();
+
+function init(){
+  scene = new THREE.Scene();
+
+  renderer = new THREE.WebGLRenderer({ antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.42;
+  viewer.appendChild(renderer.domElement);
+
+  pmrem = new THREE.PMREMGenerator(renderer);
+  sceneEnv = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(55, 1, 10, 260000);   // near/far แคบลง -> depth แม่น ลดการกระพริบ
+  camera.position.set(1200, 900, 1200);
+
+  sun = new THREE.Vector3();
+
+  // มหาสมุทร: ผืนน้ำสีพื้น + ริ้วคลื่นจาก normal map (ไม่สะท้อนท้องฟ้าเลย)
+  const waterGeo = new THREE.PlaneGeometry(100000, 100000);
+  const waterNormals = new THREE.TextureLoader().load(
+    'https://unpkg.com/three@0.160.0/examples/textures/waternormals.jpg',
+    t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(400,400); });
+  water = new THREE.Mesh(waterGeo, new THREE.MeshStandardMaterial({
+    color: 0x1a3050,                 // diffuse จางๆ (ไว้ทำริ้วคลื่นจากแสง)
+    emissive: 0x223f6b,              // สีหลัก navy blue (อ่อนลง) ตามภาพ — คุมตรง ไม่ขึ้นกับแสง
+    roughness: 0.9, metalness: 0.0,
+    normalMap: waterNormals,
+    normalScale: new THREE.Vector2(0.45, 0.45),
+    envMapIntensity: 0.0             // ไม่รับแสงสะท้อนจากท้องฟ้า
+  }));
+  water.material.toneMapped = false; // สีตรงตามที่กำหนด ไม่เพี้ยน
+  water.userData.normals = waterNormals;
+  water.rotation.x = -Math.PI/2;
+  water.position.y = 0;
+  water.material.polygonOffset = true; // กันน้ำกระพริบ (z-fighting) ตรงแนวชายฝั่ง -> ให้พื้นเกาะชนะ
+  water.material.polygonOffsetFactor = 1;
+  water.material.polygonOffsetUnits = 4;
+  scene.add(water);
+
+  sky = new Sky();
+  sky.scale.setScalar(200000);
+  scene.add(sky);
+  const u = sky.material.uniforms;
+  u['turbidity'].value = 4;
+  u['rayleigh'].value = 1.1;
+  u['mieCoefficient'].value = 0.004;
+  u['mieDirectionalG'].value = 0.85;
+
+  scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x2a3b30, 1.0));
+  const dir = new THREE.DirectionalLight(0xffffff, 1.6);
+  dir.position.set(1,1,1);
+  scene.add(dir);
+  scene.userData.dir = dir;
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 80;
+  controls.maxDistance = 12000;
+  controls.target.set(0, 0, 0);
+  controls.maxPolarAngle = Math.PI * 0.495;   // 🔒 ไม่ให้ลงต่ำกว่าผิวน้ำ
+
+  setSun(parseFloat(document.getElementById('sunEl').value));
+  resize();
+  window.addEventListener('resize', resize);
+  animate();
+}
+
+function setSun(elevationDeg){
+  const phi = THREE.MathUtils.degToRad(90 - elevationDeg);
+  const theta = THREE.MathUtils.degToRad(135);
+  sun.setFromSphericalCoords(1, phi, theta);
+  sky.material.uniforms['sunPosition'].value.copy(sun);
+  if(scene.userData.dir) scene.userData.dir.position.copy(sun);
+
+  // อบ environment map จากท้องฟ้า แล้วป้อนให้ทั้งฉาก -> วัสดุ PBR สว่างขึ้น (ไม่ดำ)
+  if(envRT) envRT.dispose();
+  sceneEnv.add(sky);                 // ย้ายท้องฟ้าไปฉากชั่วคราวเพื่อ bake
+  envRT = pmrem.fromScene(sceneEnv);
+  scene.add(sky);                    // คืนท้องฟ้ากลับฉากหลัก
+  scene.environment = envRT.texture;
+}
+
+function resize(){
+  const w = viewer.clientWidth, h = viewer.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(water.userData.normals){ water.userData.normals.offset.x += 0.0004; water.userData.normals.offset.y += 0.0002; }
+  for(const u of units){ if(u.userData.rotor) u.userData.rotor.rotation.y += 0.35; }
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+const gltfLoader = new GLTFLoader();
+const draco = new DRACOLoader();
+draco.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+gltfLoader.setDRACOLoader(draco);
+
+// แกะรูป texture ออกจากไฟล์ GLB เอง เพราะโมเดลใช้วัสดุ spec-gloss
+// (KHR_materials_pbrSpecularGlossiness) ที่ three.js รุ่นใหม่ไม่รองรับ
+// ทำให้ texture หาย เกาะเลยซีดไม่มีลาย
+function extractGlbTexture(buf){
+  try{
+    const dv = new DataView(buf);
+    let off = 12;
+    const jsonLen = dv.getUint32(off, true); off += 8;           // ข้าม length + type
+    const json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, off, jsonLen)));
+    off += jsonLen;
+    dv.getUint32(off, true);                                      // binLen (ไม่ได้ใช้)
+    off += 8;                                                     // ข้าม length + type
+    const binStart = off;
+    if(!json.images || !json.images.length) return null;
+    const img = json.images[0];
+    if(img.bufferView === undefined) return null;
+    const bv = json.bufferViews[img.bufferView];
+    const bytes = new Uint8Array(buf, binStart + (bv.byteOffset||0), bv.byteLength);
+    const blob = new Blob([bytes], { type: img.mimeType || 'image/png' });
+    const tex = new THREE.TextureLoader().load(URL.createObjectURL(blob));
+    tex.flipY = false;                                            // ตามมาตรฐาน glTF
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return tex;
+  }catch(e){ console.warn('extract texture failed', e); return null; }
+}
+
+function loadFromBuffer(buf){
+  loadEl.style.display = 'flex';
+  const tex = extractGlbTexture(buf);
+  gltfLoader.parse(buf, '', gltf => {
+    addModel(gltf.scene, tex);
+    loadEl.style.display = 'none';
+    dropEl.classList.add('hide');
+  }, err => {
+    loadEl.style.display = 'none';
+    console.error(err);
+    alert('โหลดโมเดลไม่สำเร็จ — ตรวจสอบว่าเป็นไฟล์ .glb ที่ถูกต้อง');
+  });
+}
+
+function addModel(obj, tex){
+  if(model){ scene.remove(model); }
+  model = obj;
+
+  // ทาวัสดุใหม่พร้อม texture ที่แกะมาเอง
+  // ใช้แบบ "ไม่รับแสง (unlit) + ปิด tone mapping" เพื่อให้สีของแผนที่
+  // ตรงตามภาพต้นฉบับ Sketchfab เป๊ะ (texture อบแสงมาในตัวอยู่แล้ว)
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex || null,
+    color: tex ? 0xffffff : 0x9aa0a4,
+    side: THREE.DoubleSide
+  });
+  mat.toneMapped = false;
+  terrainMeshes = [];
+  obj.traverse(o=>{ if(o.isMesh){ o.material = mat; terrainMeshes.push(o); } });
+
+  let box = new THREE.Box3().setFromObject(obj);
+  let size = box.getSize(new THREE.Vector3());
+  const maxHoriz = Math.max(size.x, size.z) || 1;
+  const s = TARGET / maxHoriz;
+  obj.scale.setScalar(s);
+
+  box.setFromObject(obj);
+  size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  obj.position.x -= center.x;
+  obj.position.z -= center.z;
+  obj.position.y -= box.min.y;
+  modelSizeY = size.y;
+
+  scene.add(obj);
+  applySeaLevel();
+  frame();
+}
+
+const SEA_LEVEL_PCT = 0.10;          // ระดับน้ำตายตัว = 10% ของความสูงเกาะ
+function applySeaLevel(){
+  const y = modelSizeY * SEA_LEVEL_PCT;
+  water.position.y = y;
+  controls.target.y = y;
+  controls.update();
+  // เรือ (naval) ลอยตามระดับน้ำ
+  units.forEach(u=>{ if(u.userData.naval){ u.userData.groundY=y; u.position.y=y; } });
+  if(selUnit) selRingObj().position.y = baseY(selUnit)+1;
+}
+window.App = {
+  frame(){
+    const d = TARGET * 1.1;
+    camera.position.set(d*0.7, d*0.55, d*0.7);
+    controls.target.set(0, water.position.y, 0);
+    controls.update();
+  },
+  top(){
+    camera.position.set(0, TARGET*1.4, 0.001);
+    controls.target.set(0, water.position.y, 0);
+    controls.update();
+  },
+  fs(){
+    if(viewer.requestFullscreen) viewer.requestFullscreen();
+    else if(viewer.webkitRequestFullscreen) viewer.webkitRequestFullscreen();
+  }
+};
+function frame(){ window.App.frame(); }
+
+document.getElementById('sunEl').addEventListener('input', e=>{
+  setSun(parseFloat(e.target.value));
+});
+
+function handleFile(file){
+  if(!file) return;
+  file.arrayBuffer().then(loadFromBuffer);
+}
+['fileMain','fileTop'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', e=> handleFile(e.target.files[0]));
+});
+
+['dragenter','dragover'].forEach(ev=>viewer.addEventListener(ev,e=>{
+  e.preventDefault(); dropEl.classList.remove('hide'); dropEl.classList.add('dragover');
+}));
+['dragleave','drop'].forEach(ev=>viewer.addEventListener(ev,e=>{
+  e.preventDefault(); dropEl.classList.remove('dragover');
+}));
+viewer.addEventListener('drop', e=>{
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(f) handleFile(f);
+});
+
+/* ============ ระบบวางกำลังทางทหาร (โมเดล 3 มิติสร้างเอง) ============ */
+const SIDE_COLORS = { blue:0x2f7bf0, red:0xf03b3b };   // สีฝ่ายสดชัด
+const _matCache = {};
+function bodyMat(side){ return _matCache[side] || (_matCache[side]=new THREE.MeshStandardMaterial({color:SIDE_COLORS[side], roughness:0.45, metalness:0.05, emissive:SIDE_COLORS[side], emissiveIntensity:0.3})); }
+const MAT = {
+  track:  new THREE.MeshStandardMaterial({color:0x202327, roughness:0.95, metalness:0.25}),
+  tank:   new THREE.MeshStandardMaterial({color:0x3c4a2e, roughness:0.8,  metalness:0.2}),
+  olive:  new THREE.MeshStandardMaterial({color:0x575f33, roughness:0.85}),
+  uniform:new THREE.MeshStandardMaterial({color:0x6b7044, roughness:0.9}),
+  helmet: new THREE.MeshStandardMaterial({color:0x424d27, roughness:0.85}),
+  skin:   new THREE.MeshStandardMaterial({color:0xc69a6b, roughness:0.7}),
+  ship:   new THREE.MeshStandardMaterial({color:0x4d5662, roughness:0.65, metalness:0.45}),
+  deck:   new THREE.MeshStandardMaterial({color:0x3a4049, roughness:0.85}),
+  jet:    new THREE.MeshStandardMaterial({color:0x717b86, roughness:0.45, metalness:0.6}),
+  glass:  new THREE.MeshStandardMaterial({color:0x1b2a3a, roughness:0.15, metalness:0.5, transparent:true, opacity:0.65}),
+  rubber: new THREE.MeshStandardMaterial({color:0x16181b, roughness:0.95}),
+  gun:    new THREE.MeshStandardMaterial({color:0x33383d, roughness:0.6,  metalness:0.5}),
+};
+
+function _box(w,h,d,m,x,y,z){ const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); o.position.set(x||0,y||0,z||0); return o; }
+function _cyl(rt,rb,h,m,seg){ return new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||16),m); }
+function _cone(r,h,m,seg){ return new THREE.Mesh(new THREE.ConeGeometry(r,h,seg||16),m); }
+function _sph(r,m){ return new THREE.Mesh(new THREE.SphereGeometry(r,18,14),m); }
+function _xcyl(r,len,m,x,y,z){ const c=_cyl(r,r,len,m,14); c.rotation.z=Math.PI/2; c.position.set(x||0,y||0,z||0); return c; } // ทรงกระบอกแกน X
+function _wheel(r,x,z,m){ const w=_cyl(r,r,0.1,m||MAT.rubber,16); w.rotation.x=Math.PI/2; w.position.set(x,r,z); return w; }
+function _roadwheels(g,m,xs,z,r){ xs.forEach(x=>{ g.add(_wheel(r,x,z,m)); g.add(_wheel(r,x,-z,m)); }); }
+function _base(side){
+  const b=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.05,0.05,40),
+    new THREE.MeshStandardMaterial({color:SIDE_COLORS[side], emissive:SIDE_COLORS[side], emissiveIntensity:0.6, roughness:0.4}));
+  b.position.y=0.026; return b;
+}
+function _tag(side,x,y,z){ return _box(0.16,0.07,0.16, bodyMat(side), x,y,z); } // แถบ/ธงระบุฝ่าย
+
+function buildUnit(type, side){
+  const g=new THREE.Group();
+  g.userData={ type, side, hover:false, hoverH:0, naval:false, rotor:null, groundY:0, heading:0 };
+  const b=bodyMat(side);   // วัสดุสีฝ่ายสำหรับตัวหน่วยหลัก (มองเห็นชัด)
+
+  if(type==='tank'){
+    g.add(_box(1.12,0.2,0.16,MAT.track,0,0.16,0.30));
+    g.add(_box(1.12,0.2,0.16,MAT.track,0,0.16,-0.30));
+    _roadwheels(g, MAT.gun, [-0.42,-0.21,0,0.21,0.42], 0.30, 0.1);
+    g.add(_box(1.0,0.16,0.5,b,0,0.30,0));
+    const glacis=_box(0.32,0.16,0.5,b,0.5,0.30,0); glacis.rotation.z=0.5; g.add(glacis);
+    g.add(_box(0.9,0.12,0.46,b,-0.02,0.40,0));
+    g.add(_box(0.55,0.22,0.5,b,-0.02,0.55,0));
+    g.add(_box(0.18,0.16,0.34,b,0.26,0.55,0));
+    g.add(_xcyl(0.045,0.85,MAT.gun,0.66,0.57,0));
+    g.add(_box(0.08,0.1,0.1,MAT.gun,1.05,0.57,0));
+    const cup=_cyl(0.1,0.1,0.08,b,14); cup.position.set(-0.12,0.68,0.12); g.add(cup);
+    g.add(_tag(side,-0.3,0.66,0));
+  }
+  else if(type==='infantry'){
+    g.add(_box(0.1,0.36,0.1,b,0,0.2,0.1));
+    g.add(_box(0.1,0.36,0.1,b,0,0.2,-0.1));
+    g.add(_box(0.26,0.36,0.18,b,0,0.55,0));
+    g.add(_box(0.16,0.26,0.1,b,-0.16,0.56,0));
+    g.add(_box(0.08,0.32,0.08,b,0.04,0.55,0.16));
+    g.add(_box(0.08,0.32,0.08,b,0.04,0.55,-0.16));
+    const head=_sph(0.1,MAT.skin); head.position.y=0.8; g.add(head);
+    const helm=_sph(0.13,MAT.helmet); helm.scale.set(1,0.7,1); helm.position.y=0.86; g.add(helm);
+    const rifle=_box(0.5,0.05,0.05,MAT.gun,0.22,0.55,0.2); rifle.rotation.y=0.15; g.add(rifle);
+    g.add(_tag(side,0,1.02,0));
+  }
+  else if(type==='artillery'){
+    g.add(_box(0.5,0.16,0.46,b,0,0.2,0));
+    g.add(_box(0.5,0.02,0.5,MAT.gun,0.1,0.34,0));
+    g.add(_wheel(0.2,0,0.3,MAT.rubber)); g.add(_wheel(0.2,0,-0.3,MAT.rubber));
+    const t1=_box(0.6,0.06,0.06,b,-0.4,0.12,0.12); t1.rotation.y=0.25; g.add(t1);
+    const t2=_box(0.6,0.06,0.06,b,-0.4,0.12,-0.12); t2.rotation.y=-0.25; g.add(t2);
+    const br=_cyl(0.05,0.06,1.0,MAT.gun); br.position.set(0.05,0.5,0); br.rotation.z=Math.PI/2-0.5; g.add(br);
+    g.add(_box(0.1,0.12,0.12,MAT.gun,0.5,0.78,0));
+    g.add(_tag(side,-0.55,0.2,0));
+  }
+  else if(type==='truck'){
+    g.add(_box(0.38,0.26,0.46,b,0.36,0.34,0));
+    g.add(_box(0.34,0.14,0.4,MAT.glass,0.5,0.42,0));
+    g.add(_box(0.78,0.36,0.5,b,-0.18,0.4,0));
+    g.add(_box(0.8,0.06,0.52,b,-0.18,0.6,0));
+    _roadwheels(g, MAT.rubber, [0.42,-0.05,-0.35], 0.26, 0.15);
+    g.add(_tag(side,-0.18,0.66,0));
+  }
+  else if(type==='heli'){
+    g.userData.hover=true; g.userData.hoverH=0.55;
+    const body=_sph(0.32,b); body.scale.set(1.6,0.82,0.9); body.position.y=0.4; g.add(body);
+    g.add(_box(0.4,0.26,0.36,MAT.glass,0.5,0.42,0));
+    g.add(_box(1.0,0.09,0.09,b,-0.78,0.46,0));
+    g.add(_box(0.06,0.28,0.04,b,-1.2,0.54,0));
+    g.add(_box(0.04,0.04,0.34,b,-1.18,0.46,0));
+    g.add(_box(0.16,0.05,0.7,b,0.05,0.32,0));
+    g.add(_xcyl(0.04,0.3,MAT.gun,0.05,0.28,0.32));
+    g.add(_xcyl(0.04,0.3,MAT.gun,0.05,0.28,-0.32));
+    g.add(_box(0.7,0.03,0.04,MAT.gun,0,0.1,0.22)); g.add(_box(0.7,0.03,0.04,MAT.gun,0,0.1,-0.22));
+    g.add(_box(0.03,0.18,0.03,MAT.gun,0.18,0.2,0.22)); g.add(_box(0.03,0.18,0.03,MAT.gun,-0.18,0.2,0.22));
+    g.add(_box(0.03,0.18,0.03,MAT.gun,0.18,0.2,-0.22)); g.add(_box(0.03,0.18,0.03,MAT.gun,-0.18,0.2,-0.22));
+    const rotor=new THREE.Group();
+    rotor.add(_box(1.8,0.03,0.1,MAT.track)); rotor.add(_box(0.1,0.03,1.8,MAT.track));
+    rotor.add(_cyl(0.06,0.06,0.12,MAT.gun,10));
+    rotor.position.set(-0.05,0.62,0); g.add(rotor); g.userData.rotor=rotor;
+    g.add(_box(0.03,0.3,0.03,MAT.track,-1.2,0.46,0.08));
+    g.add(_tag(side,-0.4,0.6,0));
+  }
+  else if(type==='ship'){            // เรือยกพลขึ้นบก (LCU)
+    g.userData.naval=true;
+    g.add(_box(1.7,0.22,0.8,b,0,0.18,0));
+    g.add(_box(1.5,0.16,0.66,MAT.deck,0,0.30,0));
+    g.add(_box(1.5,0.18,0.07,b,0,0.34,0.33));
+    g.add(_box(1.5,0.18,0.07,b,0,0.34,-0.33));
+    const ramp=_box(0.45,0.03,0.62,MAT.deck,0.97,0.16,0); ramp.rotation.z=-0.38; g.add(ramp);
+    g.add(_box(0.34,0.3,0.5,b,-0.65,0.45,0));
+    g.add(_box(0.3,0.16,0.42,MAT.glass,-0.6,0.5,0));
+    const mast=_cyl(0.02,0.02,0.3,MAT.gun,8); mast.position.set(-0.65,0.74,0); g.add(mast);
+    g.add(_box(0.4,0.14,0.34,b,0.1,0.34,0));
+    g.add(_tag(side,-0.65,0.64,0));
+  }
+  else if(type==='jet'){             // เครื่องบินรบ
+    g.userData.hover=true; g.userData.hoverH=1.5;
+    g.add(_xcyl(0.13,1.4,b,0,0.4,0));
+    const nose=_cone(0.13,0.5,b,16); nose.rotation.z=-Math.PI/2; nose.position.set(0.9,0.4,0); g.add(nose);
+    const cano=_sph(0.13,MAT.glass); cano.scale.set(1.6,0.7,0.8); cano.position.set(0.38,0.5,0); g.add(cano);
+    g.add(_box(0.55,0.04,1.7,b,-0.1,0.4,0));           // ปีกหลัก
+    g.add(_box(0.25,0.03,0.75,b,0.45,0.4,0));          // แคนาร์ดหน้า
+    const f1=_box(0.32,0.34,0.03,b,-0.6,0.56,0.2); f1.rotation.z=0.32; g.add(f1);
+    const f2=_box(0.32,0.34,0.03,b,-0.6,0.56,-0.2); f2.rotation.z=0.32; g.add(f2);
+    g.add(_box(0.3,0.03,0.7,b,-0.62,0.4,0));           // หางระดับ
+    const ex=_cyl(0.13,0.1,0.16,MAT.gun,16); ex.rotation.z=Math.PI/2; ex.position.set(-0.78,0.4,0); g.add(ex);
+    g.add(_xcyl(0.03,0.45,MAT.gun,0,0.34,0.55));             // จรวดใต้ปีก
+    g.add(_xcyl(0.03,0.45,MAT.gun,0,0.34,-0.55));
+    g.add(_tag(side,-0.6,0.72,0.2)); g.add(_tag(side,-0.6,0.72,-0.2));
+  }
+  else if(type==='hq'){
+    g.add(_box(0.7,0.32,0.55,b,0,0.2,0));
+    g.add(_box(0.74,0.12,0.58,MAT.helmet,0,0.4,0));
+    g.add(_box(0.5,0.04,0.45,MAT.gun,0,0.46,0));
+    const pole=_cyl(0.015,0.015,1.1,MAT.gun,8); pole.position.set(0.3,0.6,0.22); g.add(pole);
+    const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.4,0.24),
+      new THREE.MeshStandardMaterial({color:SIDE_COLORS[side], side:THREE.DoubleSide, roughness:0.6, emissive:SIDE_COLORS[side], emissiveIntensity:0.2}));
+    flag.position.set(0.51,0.95,0.22); g.add(flag);
+    const ant=_cyl(0.008,0.008,0.7,MAT.gun,6); ant.position.set(-0.2,0.75,-0.15); g.add(ant);
+  }
+
+  return g;
+}
+
+function curScale(){ return parseFloat(document.getElementById('unitScale').value); }
+
+// คำนวณความสูง y ของหน่วย: เรือ=ผิวน้ำ, อากาศยาน=ลอยเหนือพื้น, อื่นๆ=ติดพื้น
+function computeY(u){
+  if(u.userData.naval) return water.position.y;
+  if(u.userData.hover)  return u.userData.groundY + curScale()*u.userData.hoverH;
+  return u.userData.groundY;
+}
+function baseY(u){ return u.userData.naval ? water.position.y : u.userData.groundY; }
+
+function placeUnit(p){
+  if(!placeType) return;
+  const u=buildUnit(placeType, unitSide);
+  u.scale.setScalar(curScale());
+  u.userData.groundY = u.userData.naval ? water.position.y : p.y;
+  u.position.set(p.x, computeY(u), p.z);
+  u.rotation.y = u.userData.heading;
+  scene.add(u); units.push(u);
+  selectUnit(u);
+}
+function rotateSel(deg){
+  if(!selUnit) return;
+  selUnit.userData.heading += deg*Math.PI/180;
+  selUnit.rotation.y = selUnit.userData.heading;
+}
+
+function selRingObj(){
+  if(!selRing){
+    selRing=new THREE.Mesh(new THREE.TorusGeometry(1,0.07,10,48), new THREE.MeshBasicMaterial({color:0xffd24a}));
+    selRing.rotation.x=Math.PI/2; selRing.toneMapped=false; selRing.visible=false; scene.add(selRing);
+  }
+  return selRing;
+}
+function selectUnit(u){
+  selUnit=u; const r=selRingObj(); r.visible=true; r.scale.setScalar(curScale());
+  r.position.set(u.position.x, baseY(u)+1, u.position.z);
+}
+function deselect(){ selUnit=null; if(selRing) selRing.visible=false; }
+function moveSel(p){
+  if(!selUnit) return;
+  if(!selUnit.userData.naval) selUnit.userData.groundY=p.y;
+  selUnit.position.set(p.x, computeY(selUnit), p.z);
+  selRingObj().position.set(p.x, baseY(selUnit)+1, p.z);
+}
+function deleteSel(){ if(!selUnit) return; scene.remove(selUnit); const i=units.indexOf(selUnit); if(i>=0) units.splice(i,1); deselect(); }
+function clearAllUnits(){ units.forEach(u=>scene.remove(u)); units.length=0; deselect(); }
+function rescaleUnits(){
+  const s=curScale();
+  units.forEach(u=>{ u.scale.setScalar(s); u.position.y=computeY(u); });
+  if(selUnit){ const r=selRingObj(); r.scale.setScalar(s); r.position.set(selUnit.position.x, baseY(selUnit)+1, selUnit.position.z); }
+}
+
+/* ---- บันทึก/โหลดแผนการวางกำลัง ---- */
+function saveScene(){
+  const $=id=>document.getElementById(id);
+  const data={
+    app:'erangel-ocean', version:1,
+    settings:{ sunEl:$('sunEl').value, unitScale:$('unitScale').value },
+    units: units.map(u=>({ type:u.userData.type, side:u.userData.side,
+      x:+u.position.x.toFixed(2), z:+u.position.z.toFixed(2),
+      groundY:+u.userData.groundY.toFixed(2), heading:+u.userData.heading.toFixed(4) }))
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='erangel-plan-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function loadScene(file){
+  file.text().then(txt=>{
+    let data; try{ data=JSON.parse(txt); }catch(e){ alert('ไฟล์แผนไม่ถูกต้อง'); return; }
+    const $=id=>document.getElementById(id);
+    const st=data.settings||{};
+    if(st.unitScale!=null) $('unitScale').value=st.unitScale;
+    if(st.sunEl!=null){ $('sunEl').value=st.sunEl; setSun(parseFloat(st.sunEl)); }
+    clearAllUnits();
+    (data.units||[]).forEach(d=>{
+      const u=buildUnit(d.type, d.side==='red'?'red':'blue');
+      u.scale.setScalar(curScale());
+      u.userData.heading=d.heading||0;
+      u.userData.groundY = u.userData.naval ? water.position.y : (d.groundY||0);
+      u.position.set(d.x||0, computeY(u), d.z||0);
+      u.rotation.y=u.userData.heading;
+      scene.add(u); units.push(u);
+    });
+    deselect();
+  });
+}
+
+function setupUnits(){
+  const dom=renderer.domElement;
+  const ndc=new THREE.Vector2();
+  function setNDC(e){ const r=dom.getBoundingClientRect(); ndc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1); }
+  function pickTerrain(e){ setNDC(e); ray.setFromCamera(ndc,camera); let a=ray.intersectObjects(terrainMeshes,false); if(a.length) return a[0].point; a=ray.intersectObject(water,false); return a.length? a[0].point : null; }
+  function pickUnit(e){ setNDC(e); ray.setFromCamera(ndc,camera); const a=ray.intersectObjects(units,true); if(!a.length) return null; let o=a[0].object; while(o && units.indexOf(o)<0) o=o.parent; return o||null; }
+
+  dom.addEventListener('pointerdown', e=>{
+    if(e.button!==0) return;
+    downX=e.clientX; downY=e.clientY; movedFar=false;
+    const u=pickUnit(e);
+    if(u){ selectUnit(u); isDragging=true; controls.enabled=false; }
+  });
+  dom.addEventListener('pointermove', e=>{
+    if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>6) movedFar=true;
+    if(isDragging){ const p=pickTerrain(e); if(p) moveSel(p); }
+  });
+  window.addEventListener('pointerup', e=>{
+    if(isDragging){ isDragging=false; controls.enabled=true; return; }
+    if(movedFar) return;
+    if(placeType){ const p=pickTerrain(e); if(p) placeUnit(p); }
+    else { const u=pickUnit(e); if(u) selectUnit(u); else deselect(); }
+  });
+
+  document.querySelectorAll('.sideBtn').forEach(btn=> btn.addEventListener('click', ()=>{
+    unitSide=btn.dataset.side;
+    document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active', x===btn));
+  }));
+  document.querySelectorAll('[data-unit]').forEach(btn=> btn.addEventListener('click', ()=>{
+    placeType=btn.dataset.unit;
+    document.querySelectorAll('[data-unit]').forEach(x=>x.classList.toggle('active', x===btn));
+    document.getElementById('navMode').classList.remove('active');
+  }));
+  document.getElementById('navMode').addEventListener('click', function(){
+    placeType=null;
+    document.querySelectorAll('[data-unit]').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+  });
+  document.getElementById('delUnit').addEventListener('click', deleteSel);
+  document.getElementById('clearUnits').addEventListener('click', clearAllUnits);
+  document.getElementById('rotL').addEventListener('click', ()=>rotateSel(-15));
+  document.getElementById('rotR').addEventListener('click', ()=>rotateSel(15));
+  document.getElementById('unitScale').addEventListener('input', rescaleUnits);
+  document.getElementById('saveBtn').addEventListener('click', saveScene);
+  document.getElementById('loadBtn').addEventListener('click', ()=>document.getElementById('loadFile').click());
+  document.getElementById('loadFile').addEventListener('change', e=>{ if(e.target.files[0]) loadScene(e.target.files[0]); e.target.value=''; });
+  window.addEventListener('keydown', e=>{
+    if(!selUnit) return;
+    const step = e.shiftKey ? 5 : 15;
+    if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); deleteSel(); }
+    else if(e.key==='q'||e.key==='Q'){ rotateSel(-step); }
+    else if(e.key==='e'||e.key==='E'){ rotateSel(step); }
+  });
+}
+
+init();
+setupUnits();
+fetch('erangel.glb').then(r=>{ if(r.ok) return r.arrayBuffer(); }).then(b=>{ if(b) loadFromBuffer(b); }).catch(()=>{});
+</script>
+</body>
+</html>
