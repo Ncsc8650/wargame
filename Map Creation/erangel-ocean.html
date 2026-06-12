@@ -191,6 +191,7 @@ let renderer, scene, camera, controls, water, sky, sun, model;
 let pmrem, sceneEnv, envRT;          // สำหรับสร้าง environment map จากท้องฟ้า
 let modelSizeY = 100;
 const TARGET = 1500;
+const TERRAIN_HEIGHT_MULTIPLIER = 2.0;
 
 // ---- ระบบวางกำลังทางทหาร ----
 let terrainMeshes = [];              // mesh ของเกาะ ไว้ raycast หาจุดวาง
@@ -365,6 +366,7 @@ function addModel(obj, tex){
   const maxHoriz = Math.max(size.x, size.z) || 1;
   const s = TARGET / maxHoriz;
   obj.scale.setScalar(s);
+  obj.scale.y *= TERRAIN_HEIGHT_MULTIPLIER;
 
   box.setFromObject(obj);
   size = box.getSize(new THREE.Vector3());
