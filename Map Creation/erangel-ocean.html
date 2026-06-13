@@ -48,6 +48,8 @@
     overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5);
   }
   .viewer canvas{display:block;width:100%;height:100%;}
+  .viewer.pan-mode canvas{cursor:grab;}
+  .viewer.pan-mode canvas:active{cursor:grabbing;}
   #drop{
     position:absolute;inset:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:14px;text-align:center;
@@ -203,6 +205,17 @@ let isDragging = false, downX = 0, downY = 0, movedFar = false;
 const units = [];
 const ray = new THREE.Raycaster();
 
+function applyViewMode(){
+  if(!controls) return;
+  const panMode = placeType === null;
+  controls.mouseButtons.LEFT = panMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+  controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
+  controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+  controls.touches.ONE = panMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
+  controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+  viewer.classList.toggle('pan-mode', panMode);
+}
+
 function init(){
   scene = new THREE.Scene();
 
@@ -278,6 +291,11 @@ function init(){
   controls.maxDistance = 12000;
   controls.target.set(0, 0, 0);
   controls.maxPolarAngle = Math.PI * 0.495;   // 🔒 ไม่ให้ลงต่ำกว่าผิวน้ำ
+  controls.enablePan = true;
+  controls.screenSpacePanning = true;
+  controls.panSpeed = 1.15;
+  controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+  applyViewMode();
 
   setSun(parseFloat(document.getElementById('sunEl').value));
   resize();
@@ -687,6 +705,7 @@ function loadScene(file){
 function setupUnits(){
   const dom=renderer.domElement;
   const ndc=new THREE.Vector2();
+  dom.addEventListener('contextmenu', e=>e.preventDefault());
   function setNDC(e){ const r=dom.getBoundingClientRect(); ndc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1); }
   function pickTerrain(e){ setNDC(e); ray.setFromCamera(ndc,camera); let a=ray.intersectObjects(terrainMeshes,false); if(a.length) return a[0].point; a=ray.intersectObject(water,false); return a.length? a[0].point : null; }
   function pickUnit(e){ setNDC(e); ray.setFromCamera(ndc,camera); const a=ray.intersectObjects(units,true); if(!a.length) return null; let o=a[0].object; while(o && units.indexOf(o)<0) o=o.parent; return o||null; }
@@ -702,6 +721,7 @@ function setupUnits(){
     if(isDragging){ const p=pickTerrain(e); if(p) moveSel(p); }
   });
   window.addEventListener('pointerup', e=>{
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
     if(isDragging){ isDragging=false; controls.enabled=true; return; }
     if(movedFar) return;
     if(placeType){ const p=pickTerrain(e); if(p) placeUnit(p); }
@@ -716,11 +736,13 @@ function setupUnits(){
     placeType=btn.dataset.unit;
     document.querySelectorAll('[data-unit]').forEach(x=>x.classList.toggle('active', x===btn));
     document.getElementById('navMode').classList.remove('active');
+    applyViewMode();
   }));
   document.getElementById('navMode').addEventListener('click', function(){
     placeType=null;
     document.querySelectorAll('[data-unit]').forEach(x=>x.classList.remove('active'));
     this.classList.add('active');
+    applyViewMode();
   });
   document.getElementById('delUnit').addEventListener('click', deleteSel);
   document.getElementById('clearUnits').addEventListener('click', clearAllUnits);
