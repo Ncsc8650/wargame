@@ -50,6 +50,7 @@
   .viewer canvas{display:block;width:100%;height:100%;}
   .viewer.pan-mode canvas{cursor:grab;}
   .viewer.pan-mode canvas:active{cursor:grabbing;}
+  .viewer.free-camera canvas{cursor:crosshair;}
   #drop{
     position:absolute;inset:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:14px;text-align:center;
@@ -111,6 +112,7 @@
       <button class="uBtn" data-unit="hq">🚩 บก.</button>
       <span class="udiv"></span>
       <button class="uBtn active" id="navMode">✋ เลื่อนมุมมอง</button>
+      <button class="uBtn" id="freeCamMode">🎮 กล้องอิสระ</button>
       <button id="rotL" title="หมุนซ้าย (Q)">⟲</button>
       <button id="rotR" title="หมุนขวา (E)">⟳</button>
       <button id="delUnit">🗑️ ลบ</button>
@@ -202,18 +204,68 @@ let terrainMeshes = [];              // mesh ของเกาะ ไว้ ray
 let selRing = null, selUnit = null;  // ห่วงไฮไลต์ + หน่วยที่เลือก
 let placeType = null, unitSide = 'blue';
 let isDragging = false, downX = 0, downY = 0, movedFar = false;
+let freeCamera = false, freeYaw = 0, freePitch = 0, lastFrameTime = performance.now();
+const freeKeys = new Set();
 const units = [];
 const ray = new THREE.Raycaster();
 
 function applyViewMode(){
   if(!controls) return;
   const panMode = placeType === null;
+  if(freeCamera) return;
   controls.mouseButtons.LEFT = panMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
   controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
   controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
   controls.touches.ONE = panMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
   controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
   viewer.classList.toggle('pan-mode', panMode);
+}
+
+function setFreeCamera(enabled){
+  if(!controls) return;
+  freeCamera = enabled;
+  controls.enabled = !enabled;
+  viewer.classList.toggle('free-camera', enabled);
+  viewer.classList.toggle('pan-mode', !enabled && placeType === null);
+  document.getElementById('freeCamMode').classList.toggle('active', enabled);
+  document.getElementById('navMode').classList.toggle('active', !enabled && placeType === null);
+  if(enabled){
+    placeType = null;
+    document.querySelectorAll('[data-unit]').forEach(x=>x.classList.remove('active'));
+    const euler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
+    freePitch = euler.x;
+    freeYaw = euler.y;
+    renderer.domElement.requestPointerLock?.();
+  }else{
+    freeKeys.clear();
+    if(document.pointerLockElement === renderer.domElement) document.exitPointerLock?.();
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    controls.target.copy(camera.position).addScaledVector(forward, 1000);
+    controls.enabled = true;
+    applyViewMode();
+    controls.update();
+  }
+}
+
+function updateFreeCamera(dt){
+  if(!freeCamera) return;
+  const speed = (freeKeys.has('ShiftLeft') || freeKeys.has('ShiftRight')) ? 1500 : 420;
+  const move = new THREE.Vector3();
+  const forward = new THREE.Vector3();
+  const right = new THREE.Vector3();
+  camera.getWorldDirection(forward);
+  right.crossVectors(forward, camera.up).normalize();
+  if(freeKeys.has('KeyW')) move.add(forward);
+  if(freeKeys.has('KeyS')) move.sub(forward);
+  if(freeKeys.has('KeyD')) move.add(right);
+  if(freeKeys.has('KeyA')) move.sub(right);
+  if(freeKeys.has('Space')) move.y += 1;
+  if(freeKeys.has('ControlLeft') || freeKeys.has('ControlRight')) move.y -= 1;
+  if(move.lengthSq() > 0) camera.position.addScaledVector(move.normalize(), speed * dt);
+  const waterY = water ? water.position.y : 0;
+  camera.position.y = Math.max(camera.position.y, waterY + 25);
+  camera.position.y = Math.min(camera.position.y, 50000);
 }
 
 function init(){
@@ -328,9 +380,13 @@ function resize(){
 function animate(){
   requestAnimationFrame(animate);
   if(webglContextLost) return;
+  const now = performance.now();
+  const dt = Math.min((now - lastFrameTime) / 1000, 0.05);
+  lastFrameTime = now;
   if(water.userData.normals){ water.userData.normals.offset.x += 0.0004; water.userData.normals.offset.y += 0.0002; }
   for(const u of units){ if(u.userData.rotor) u.userData.rotor.rotation.y += 0.35; }
-  controls.update();
+  updateFreeCamera(dt);
+  if(!freeCamera) controls.update();
   renderer.render(scene, camera);
 }
 
@@ -706,21 +762,37 @@ function setupUnits(){
   const dom=renderer.domElement;
   const ndc=new THREE.Vector2();
   dom.addEventListener('contextmenu', e=>e.preventDefault());
+  dom.addEventListener('click', ()=>{
+    if(freeCamera && document.pointerLockElement !== dom) dom.requestPointerLock?.();
+  });
+  document.addEventListener('pointerlockchange', ()=>{
+    if(freeCamera && document.pointerLockElement !== dom) setFreeCamera(false);
+  });
+  document.addEventListener('mousemove', e=>{
+    if(!freeCamera || document.pointerLockElement !== dom) return;
+    freeYaw -= e.movementX * 0.0022;
+    freePitch -= e.movementY * 0.0022;
+    freePitch = Math.max(-Math.PI * 0.48, Math.min(Math.PI * 0.48, freePitch));
+    camera.rotation.set(freePitch, freeYaw, 0, 'YXZ');
+  });
   function setNDC(e){ const r=dom.getBoundingClientRect(); ndc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1); }
   function pickTerrain(e){ setNDC(e); ray.setFromCamera(ndc,camera); let a=ray.intersectObjects(terrainMeshes,false); if(a.length) return a[0].point; a=ray.intersectObject(water,false); return a.length? a[0].point : null; }
   function pickUnit(e){ setNDC(e); ray.setFromCamera(ndc,camera); const a=ray.intersectObjects(units,true); if(!a.length) return null; let o=a[0].object; while(o && units.indexOf(o)<0) o=o.parent; return o||null; }
 
   dom.addEventListener('pointerdown', e=>{
+    if(freeCamera){ e.preventDefault(); return; }
     if(e.button!==0) return;
     downX=e.clientX; downY=e.clientY; movedFar=false;
     const u=pickUnit(e);
     if(u){ selectUnit(u); isDragging=true; controls.enabled=false; }
   });
   dom.addEventListener('pointermove', e=>{
+    if(freeCamera) return;
     if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>6) movedFar=true;
     if(isDragging){ const p=pickTerrain(e); if(p) moveSel(p); }
   });
   window.addEventListener('pointerup', e=>{
+    if(freeCamera) return;
     if(e.pointerType === 'mouse' && e.button !== 0) return;
     if(isDragging){ isDragging=false; controls.enabled=true; return; }
     if(movedFar) return;
@@ -733,16 +805,21 @@ function setupUnits(){
     document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active', x===btn));
   }));
   document.querySelectorAll('[data-unit]').forEach(btn=> btn.addEventListener('click', ()=>{
+    if(freeCamera) setFreeCamera(false);
     placeType=btn.dataset.unit;
     document.querySelectorAll('[data-unit]').forEach(x=>x.classList.toggle('active', x===btn));
     document.getElementById('navMode').classList.remove('active');
     applyViewMode();
   }));
   document.getElementById('navMode').addEventListener('click', function(){
+    if(freeCamera) setFreeCamera(false);
     placeType=null;
     document.querySelectorAll('[data-unit]').forEach(x=>x.classList.remove('active'));
     this.classList.add('active');
     applyViewMode();
+  });
+  document.getElementById('freeCamMode').addEventListener('click', ()=>{
+    setFreeCamera(!freeCamera);
   });
   document.getElementById('delUnit').addEventListener('click', deleteSel);
   document.getElementById('clearUnits').addEventListener('click', clearAllUnits);
@@ -753,11 +830,22 @@ function setupUnits(){
   document.getElementById('loadBtn').addEventListener('click', ()=>document.getElementById('loadFile').click());
   document.getElementById('loadFile').addEventListener('change', e=>{ if(e.target.files[0]) loadScene(e.target.files[0]); e.target.value=''; });
   window.addEventListener('keydown', e=>{
+    if(freeCamera){
+      if(e.code === 'Escape'){ setFreeCamera(false); return; }
+      if(['KeyW','KeyA','KeyS','KeyD','Space','ControlLeft','ControlRight','ShiftLeft','ShiftRight'].includes(e.code)){
+        e.preventDefault();
+        freeKeys.add(e.code);
+      }
+      return;
+    }
     if(!selUnit) return;
     const step = e.shiftKey ? 5 : 15;
     if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); deleteSel(); }
     else if(e.key==='q'||e.key==='Q'){ rotateSel(-step); }
     else if(e.key==='e'||e.key==='E'){ rotateSel(step); }
+  });
+  window.addEventListener('keyup', e=>{
+    freeKeys.delete(e.code);
   });
 }
 
